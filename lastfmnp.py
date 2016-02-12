@@ -24,7 +24,6 @@ Description:
     queried). In the nothing message, only [who] is replaced.
 """
 import weechat
-import imp
 import pylast
 
 SCRIPT = "lastfmnp"
@@ -36,7 +35,9 @@ CONFKEY_USER = "user"
 CONFKEY_NOTHING = "nothing"
 CONFKEY_QUIET = "quiet"
 
-
+"""
+    Says the retrieved np information to the buffer.
+"""
 def sayit(who, np, buffer):
     message = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_NPSTRING))
@@ -67,7 +68,9 @@ def sayit(who, np, buffer):
     if len(saystr) > 0:
         weechat.command(buffer, saystr.encode("utf-8"))
 
-
+"""
+    Command to be called by weechat user: /lastfmnp
+"""
 def lastfmnp(data, buffer, args):
     api_key = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_APIKEY))
@@ -86,6 +89,9 @@ def lastfmnp(data, buffer, args):
     return weechat.WEECHAT_RC_OK
 
 
+"""
+    Initialization for Weechat
+"""
 weechat.register(SCRIPT, "i7c", "0.1", "GPL3",
         "Prints currently playing song from last.fm", "", "")
 
