@@ -38,41 +38,49 @@ KEY_TITLE=u"[title]"
 KEY_ARTIST=u"[artist]"
 KEY_ALBUM=u"[album]"
 
-"""
-    Formats an np string, depending on the information available
-"""
-def format_np(who, artist, title, album = None):
-    message = weechat.config_string(weechat.config_get(CONF_PREFIX
-        + CONFKEY_NPSTRING))
-    message_album = weechat.config_string(weechat.config_get(CONF_PREFIX
-        + CONFKEY_NPSTRING_ALBUM))
-    replace_map = {KEY_WHO: who,
-            KEY_ARTIST: artist,
-            KEY_TITLE: title}
-    result = message
-    if album:
-        replace_map[KEY_ALBUM] = album
-        result = message_album
+REPLACE_MAP = {
+        "who": u"[who]",
+        "title": u"[title]",
+        "artist": u"[artist]",
+        "album": u"[album]"
+        }
 
-    for k, v in replace_map.items():
-        result = result.replace(k, v)
+"""
+    Formats an np string
+"""
+def format_message(template, **kwargs):
+    result = template
+    for k,v in kwargs.iteritems():
+        if k in REPLACE_MAP:
+            result = result.replace(REPLACE_MAP[k], v)
+        else:
+            weechat.prnt("", "Unknown key: " + k)
     return result
 
 """
     Says the retrieved np information to the buffer.
 """
 def sayit(who, np, buffer):
-    nothing = weechat.config_string(weechat.config_get(CONF_PREFIX
+    # get template strings from the config
+    message = weechat.config_string(weechat.config_get(CONF_PREFIX
+        + CONFKEY_NPSTRING))
+    message_album = weechat.config_string(weechat.config_get(CONF_PREFIX
+        + CONFKEY_NPSTRING_ALBUM))
+    message_nothing = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_NOTHING))
+
     if np:
         title = np.title
         artist = np.artist.name
         album = None
         if np.get_album():
             album = np.get_album().get_title()
-        say = format_np(who, artist, title, album)
+            say = format_message(message_album, who=who, artist=artist,
+                    title=title, album=album)
+        else:
+            say = format_message(message, who=who, artist=artist, title=title)
     else:
-        say = unicode(nothing).replace(KEY_WHO, who)
+        say = unicode(message_nothing).replace(KEY_WHO, who)
     if len(say) > 0:
         weechat.command(buffer, say.encode("utf-8"))
 
