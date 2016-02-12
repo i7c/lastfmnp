@@ -35,37 +35,43 @@ CONFKEY_USER = "user"
 CONFKEY_NOTHING = "nothing"
 
 """
-    Says the retrieved np information to the buffer.
+    Formats an np string, depending on the information available
 """
-def sayit(who, np, buffer):
+def format_np(who, artist, title, album = None):
     message = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_NPSTRING))
     message_album = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_NPSTRING))
     nothing = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_NOTHING))
+    replace_map = {u"[who]": who,
+            u"[artist]": artist,
+            u"[title]": title}
+    result = message
+    if album:
+        replace_map[u"[album]"] = album
+        result = message_album
 
+    for k, v in replace_map.items():
+        result = result.replace(k, v)
+    return result
+
+"""
+    Says the retrieved np information to the buffer.
+"""
+def sayit(who, np, buffer):
     if np:
         title = np.title
         artist = np.artist.name
-
-        map = {u"[who]": who,
-                u"[artist]": artist,
-                u"[title]": title}
+        album = None
         if np.get_album():
             album = np.get_album().get_title()
-            map[u"[album]"] = album
-            saystr = unicode(message_album)
-        else:
-            saystr = unicode(message)
-
-        for k, v in map.items():
-            saystr = saystr.replace(k, v)
+        say = format_np(who, artist, title, album)
     else:
-        saystr = unicode(nothing)
-        saystr = saystr.replace(u"[who]", who)
-    if len(saystr) > 0:
-        weechat.command(buffer, saystr.encode("utf-8"))
+        say = unicode(nothing)
+        say = saystr.replace(u"[who]", who)
+    if len(say) > 0:
+        weechat.command(buffer, say.encode("utf-8"))
 
 """
     Command to be called by weechat user: /lastfmnp
