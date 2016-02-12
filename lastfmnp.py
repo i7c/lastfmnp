@@ -45,7 +45,7 @@ def format_np(who, artist, title, album = None):
     message = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_NPSTRING))
     message_album = weechat.config_string(weechat.config_get(CONF_PREFIX
-        + CONFKEY_NPSTRING))
+        + CONFKEY_NPSTRING_ALBUM))
     replace_map = {KEY_WHO: who,
             KEY_ARTIST: artist,
             KEY_TITLE: title}
