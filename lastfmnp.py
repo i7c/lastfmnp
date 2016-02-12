@@ -33,6 +33,10 @@ CONFKEY_NPSTRING = "npstring"
 CONFKEY_NPSTRING_ALBUM = "npstring_album"
 CONFKEY_USER = "user"
 CONFKEY_NOTHING = "nothing"
+KEY_WHO=u"[who]"
+KEY_TITLE=u"[title]"
+KEY_ARTIST=u"[artist]"
+KEY_ALBUM=u"[album]"
 
 """
     Formats an np string, depending on the information available
@@ -42,14 +46,12 @@ def format_np(who, artist, title, album = None):
         + CONFKEY_NPSTRING))
     message_album = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_NPSTRING))
-    nothing = weechat.config_string(weechat.config_get(CONF_PREFIX
-        + CONFKEY_NOTHING))
-    replace_map = {u"[who]": who,
-            u"[artist]": artist,
-            u"[title]": title}
+    replace_map = {KEY_WHO: who,
+            KEY_ARTIST: artist,
+            KEY_TITLE: title}
     result = message
     if album:
-        replace_map[u"[album]"] = album
+        replace_map[KEY_ALBUM] = album
         result = message_album
 
     for k, v in replace_map.items():
@@ -60,6 +62,8 @@ def format_np(who, artist, title, album = None):
     Says the retrieved np information to the buffer.
 """
 def sayit(who, np, buffer):
+    nothing = weechat.config_string(weechat.config_get(CONF_PREFIX
+        + CONFKEY_NOTHING))
     if np:
         title = np.title
         artist = np.artist.name
@@ -68,8 +72,7 @@ def sayit(who, np, buffer):
             album = np.get_album().get_title()
         say = format_np(who, artist, title, album)
     else:
-        say = unicode(nothing)
-        say = saystr.replace(u"[who]", who)
+        say = unicode(nothing).replace(KEY_WHO, who)
     if len(say) > 0:
         weechat.command(buffer, say.encode("utf-8"))
 
