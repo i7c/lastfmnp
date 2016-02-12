@@ -41,6 +41,7 @@ CONF_PREFIX = "plugins.var.python." + SCRIPT + "."
 CONFKEY_APIKEY = "apikey"
 CONFKEY_NPSTRING = "npstring"
 CONFKEY_NPSTRING_ALBUM = "npstring_album"
+CONFKEY_TELLSTRING="tellstring"
 CONFKEY_USER = "user"
 CONFKEY_WHO = "who"
 
@@ -48,7 +49,8 @@ REPLACE_MAP = {
         "who": u"[who]",
         "title": u"[title]",
         "artist": u"[artist]",
-        "album": u"[album]"
+        "album": u"[album]",
+        "addressee": u"[addressee]"
         }
 
 """
@@ -116,6 +118,20 @@ def lastfmnp(data, buffer, args):
         weechat.command(buffer, msg.encode("utf-8"))
     return weechat.WEECHAT_RC_OK
 
+def tellnp(data, buffer, args):
+    if len(args) < 1:
+        weechat.prnt("", "tellnp needs one argument!")
+        return weechat.WEECHAT_RC_ERROR;
+    who = weechat.config_string(weechat.config_get(CONF_PREFIX
+        + CONFKEY_WHO))
+    message_tell = weechat.config_string(weechat.config_get(CONF_PREFIX
+        + CONFKEY_TELLSTRING))
+    np = lastfm_retrieve()
+    msg = format_message(message_tell, who=unicode(who),
+            addressee=unicode(args), **np)
+    if len(msg) > 0:
+        weechat.command(buffer, msg.encode("utf-8"))
+    return weechat.WEECHAT_RC_OK
 
 """
     Initialization for Weechat
@@ -125,12 +141,15 @@ weechat.register(SCRIPT, "i7c", "0.1", "GPL3",
 
 weechat.hook_command("lastfmnp", "prints currently playing song",
         "[username]", "username: lastfm username", "lastfmnp", "lastfmnp", "")
+weechat.hook_command("tellnp", "tells a fellow user the currently playing song",
+        "[nick]", "nick: the other user", "tellnp", "tellnp", "")
 
 script_options = {
         CONFKEY_NPSTRING: "[who] np: [artist] - [title]",
         CONFKEY_NPSTRING_ALBUM: "[who] np: [artist] - [title] ([album])",
         CONFKEY_APIKEY: "",
         CONFKEY_USER: "",
+        CONFKEY_TELLSTRING: "[addressee]: I'm np: [artist] - [title]",
         CONFKEY_WHO: "/me"}
 
 for option, default in script_options.items():
