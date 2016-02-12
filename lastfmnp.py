@@ -32,7 +32,6 @@ CONFKEY_APIKEY = "apikey"
 CONFKEY_NPSTRING = "npstring"
 CONFKEY_NPSTRING_ALBUM = "npstring_album"
 CONFKEY_USER = "user"
-CONFKEY_NOTHING = "nothing"
 CONFKEY_WHO = "who"
 
 REPLACE_MAP = {
@@ -89,8 +88,6 @@ def lastfmnp(data, buffer, args):
         + CONFKEY_NPSTRING))
     message_album = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_NPSTRING_ALBUM))
-    message_nothing = weechat.config_string(weechat.config_get(CONF_PREFIX
-        + CONFKEY_NOTHING))
 
     if len(args) > 0:
         # which song is someone else playing (lastfmnp command with argument)
@@ -101,8 +98,10 @@ def lastfmnp(data, buffer, args):
         np = lastfm_retrieve()
         if "album" in np:
             msg = format_message(message_album, who=unicode(who), **np)
-        else:
+        elif np:
             msg = format_message(message_default, who=unicode(who), **np)
+        else:
+            weechat.prnt("", "lastfmnp: API response was empty or invalid.")
     if len(msg) > 0:
         weechat.command(buffer, msg.encode("utf-8"))
     return weechat.WEECHAT_RC_OK
@@ -122,8 +121,7 @@ script_options = {
         CONFKEY_NPSTRING_ALBUM: "[who] np: [artist] - [title] ([album])",
         CONFKEY_APIKEY: "",
         CONFKEY_USER: "",
-        CONFKEY_WHO: "/me",
-        CONFKEY_NOTHING: "[who] is not playing anything right now."}
+        CONFKEY_WHO: "/me"}
 
 for option, default in script_options.items():
     if not weechat.config_is_set_plugin(option):
