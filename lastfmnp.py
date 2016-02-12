@@ -77,23 +77,32 @@ def sayit(who, np, buffer):
         weechat.command(buffer, say.encode("utf-8"))
 
 """
-    Command to be called by weechat user: /lastfmnp
+    Retrieves the np information for who. If who is not set, retrieve for user
+    set in the configuration opitons.
 """
-def lastfmnp(data, buffer, args):
+def lastfm_retrieve(who = None):
     api_key = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_APIKEY))
     username = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_USER))
 
     network = pylast.LastFMNetwork(api_key = api_key)
-    if len(args) > 0:
-        user = network.get_user(args)
-        np = user.get_now_playing()
-        sayit(unicode(args), np, buffer)
+    if who:
+        user = network.get_user(who)
+        return user.get_now_playing()
     else:
         user = network.get_user(username)
-        np = user.get_now_playing()
-        sayit(u"/me", np, buffer)
+        return user.get_now_playing()
+
+"""
+    Command to be called by weechat user: /lastfmnp
+"""
+def lastfmnp(data, buffer, args):
+
+    if len(args) > 0:
+        sayit(unicode(args), lastfm_retrieve(args), buffer)
+    else:
+        sayit(u"/me", lastfm_retrieve(), buffer)
     return weechat.WEECHAT_RC_OK
 
 
