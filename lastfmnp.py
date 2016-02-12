@@ -33,6 +33,7 @@ CONFKEY_NPSTRING = "npstring"
 CONFKEY_NPSTRING_ALBUM = "npstring_album"
 CONFKEY_USER = "user"
 CONFKEY_NOTHING = "nothing"
+CONFKEY_WHO = "who"
 
 REPLACE_MAP = {
         "who": u"[who]",
@@ -56,7 +57,7 @@ def format_message(template, **kwargs):
 """
     Says the retrieved np information to the buffer.
 """
-def sayit(who, np, buffer):
+def sayit(np, buffer, **kwargs):
     # get template strings from the config
     message = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_NPSTRING))
@@ -71,12 +72,12 @@ def sayit(who, np, buffer):
         album = None
         if np.get_album():
             album = np.get_album().get_title()
-            say = format_message(message_album, who=who, artist=artist,
-                    title=title, album=album)
+            say = format_message(message_album, artist=artist, title=title,
+                    album=album, **kwargs)
         else:
-            say = format_message(message, who=who, artist=artist, title=title)
+            say = format_message(message, artist=artist, title=title, **kwargs)
     else:
-        say = format_message(message_nothing, who=who)
+        say = format_message(message_nothing, **kwargs)
     if len(say) > 0:
         weechat.command(buffer, say.encode("utf-8"))
 
@@ -102,11 +103,13 @@ def lastfm_retrieve(who = None):
     Command to be called by weechat user: /lastfmnp
 """
 def lastfmnp(data, buffer, args):
+    who = weechat.config_string(weechat.config_get(CONF_PREFIX
+        + CONFKEY_WHO))
 
     if len(args) > 0:
-        sayit(unicode(args), lastfm_retrieve(args), buffer)
+        sayit(lastfm_retrieve(args), buffer, who=unicode(args))
     else:
-        sayit(u"/me", lastfm_retrieve(), buffer)
+        sayit(lastfm_retrieve(), buffer, who=unicode(who))
     return weechat.WEECHAT_RC_OK
 
 
@@ -124,6 +127,7 @@ script_options = {
         CONFKEY_NPSTRING_ALBUM: "[who] np: [artist] - [title] ([album])",
         CONFKEY_APIKEY: "",
         CONFKEY_USER: "",
+        CONFKEY_WHO: "/me",
         CONFKEY_NOTHING: "[who] is not playing anything right now."}
 
 for option, default in script_options.items():
