@@ -33,7 +33,6 @@ CONFKEY_NPSTRING = "npstring"
 CONFKEY_NPSTRING_ALBUM = "npstring_album"
 CONFKEY_USER = "user"
 CONFKEY_NOTHING = "nothing"
-CONFKEY_QUIET = "quiet"
 
 """
     Says the retrieved np information to the buffer.
@@ -99,12 +98,11 @@ weechat.hook_command("lastfmnp", "prints currently playing song",
         "[username]", "username: lastfm username", "lastfmnp", "lastfmnp", "")
 
 script_options = {
-        CONFKEY_NPSTRING: "[who] is playing [artist] - [title]",
-        CONFKEY_NPSTRING_ALBUM: "[who] is playing [artist] - [title] ([album])",
+        CONFKEY_NPSTRING: "[who] np: [artist] - [title]",
+        CONFKEY_NPSTRING_ALBUM: "[who] np: [artist] - [title] ([album])",
         CONFKEY_APIKEY: "",
         CONFKEY_USER: "",
-        CONFKEY_NOTHING: "[who] is not playing anything right now.",
-        CONFKEY_QUIET: "off"}
+        CONFKEY_NOTHING: "[who] is not playing anything right now."}
 
 for option, default in script_options.items():
     if not weechat.config_is_set_plugin(option):
