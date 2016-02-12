@@ -33,10 +33,6 @@ CONFKEY_NPSTRING = "npstring"
 CONFKEY_NPSTRING_ALBUM = "npstring_album"
 CONFKEY_USER = "user"
 CONFKEY_NOTHING = "nothing"
-KEY_WHO=u"[who]"
-KEY_TITLE=u"[title]"
-KEY_ARTIST=u"[artist]"
-KEY_ALBUM=u"[album]"
 
 REPLACE_MAP = {
         "who": u"[who]",
@@ -80,7 +76,7 @@ def sayit(who, np, buffer):
         else:
             say = format_message(message, who=who, artist=artist, title=title)
     else:
-        say = unicode(message_nothing).replace(KEY_WHO, who)
+        say = format_message(message_nothing, who=who)
     if len(say) > 0:
         weechat.command(buffer, say.encode("utf-8"))
 
