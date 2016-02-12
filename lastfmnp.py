@@ -10,18 +10,28 @@ Description:
     buffer. It requires a valid API key for the last.fm API. This plugin does
     not provide the key, you may obtain one from last.fm.
 
-    lastfmnp.py provides one command: /lastfmnp
+    np command: /lastfmnp [user]
 
-    If no argument is provided, it will retrieve the currenctly playing song by
-    last.fm user set in "plugins.var.python.lastfmnp.user". With one argument
-    it will retrieve the song of that user, like so:
+    If the optional user argument is not provided, it will retrieve the
+    currenctly playing song by last.fm user set in
+    "plugins.var.python.lastfmnp.user". With one argument it will retrieve the
+    song of that user, like so:
 
     /lastfmnp iSevenC
 
-    The script will say the message set in the npstring option if a song is and
-    the message in the nothing option otherwise. [who], [artist] and [title]
-    are replaced by the respective values ([who] being "/me" or the user you
-    queried). In the nothing message, only [who] is replaced.
+    With or without optional argument, the script will say the message set in
+    the npstring option. The following placeholders are replaced:
+
+    [who] is replaced by either the provided username, or by whatever is set in
+    the "plugins.var.python.lastfmnp.who" option. This is usually "/me".
+
+    [title] is replaced by the song title
+
+    [artist] is replaced by the song's artist
+
+    If the last.fm API provides information about the album, lastfmnp uses
+    "plugins.var.python.lastfmnp.npstring_album" as template instead.
+    Additionally [album] is replaced by the name of the album.
 """
 import weechat
 import pylast
