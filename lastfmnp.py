@@ -2,13 +2,28 @@
     lastfmnp.py
 
     author: i7c <i7c AT posteo PERIOD de>
-    version: 0.1
+    version: 0.2
     license: GPLv3
+
+LICENSE:
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Description:
     lastfmnp.py can say the currently played song  by a last.fm user to a
     buffer. It requires a valid API key for the last.fm API. This plugin does
     not provide the key, you may obtain one from last.fm.
+
 
     np command: /lastfmnp [user]
 
@@ -32,6 +47,12 @@ Description:
     If the last.fm API provides information about the album, lastfmnp uses
     "plugins.var.python.lastfmnp.npstring_album" as template instead.
     Additionally [album] is replaced by the name of the album.
+
+
+    tell command: /tellnp [nick]
+
+    Works like /lastfmnp, but uses tellstring as message template and replaces
+    [addressee] by the provided nick argument.
 """
 import weechat
 import pylast
@@ -136,7 +157,7 @@ def tellnp(data, buffer, args):
 """
     Initialization for Weechat
 """
-weechat.register(SCRIPT, "i7c", "0.1", "GPL3",
+weechat.register(SCRIPT, "i7c", "0.2", "GPL3",
         "Prints currently playing song from last.fm", "", "")
 
 weechat.hook_command("lastfmnp", "prints currently playing song",
