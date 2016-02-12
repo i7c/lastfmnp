@@ -57,7 +57,7 @@ def format_message(template, **kwargs):
 """
     Says the retrieved np information to the buffer.
 """
-def sayit(np, buffer, **kwargs):
+def format_message_lastfm(np, buffer, **kwargs):
     # get template strings from the config
     message = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_NPSTRING))
@@ -78,8 +78,7 @@ def sayit(np, buffer, **kwargs):
             say = format_message(message, artist=artist, title=title, **kwargs)
     else:
         say = format_message(message_nothing, **kwargs)
-    if len(say) > 0:
-        weechat.command(buffer, say.encode("utf-8"))
+    return say
 
 """
     Retrieves the np information for who. If who is not set, retrieve for user
@@ -107,9 +106,12 @@ def lastfmnp(data, buffer, args):
         + CONFKEY_WHO))
 
     if len(args) > 0:
-        sayit(lastfm_retrieve(args), buffer, who=unicode(args))
+        msg = format_message_lastfm(lastfm_retrieve(args), buffer,
+                who=unicode(args))
     else:
-        sayit(lastfm_retrieve(), buffer, who=unicode(who))
+        msg = format_message_lastfm(lastfm_retrieve(), buffer, who=unicode(who))
+    if len(msg) > 0:
+        weechat.command(buffer, msg.encode("utf-8"))
     return weechat.WEECHAT_RC_OK
 
 
