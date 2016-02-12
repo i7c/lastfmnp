@@ -31,6 +31,7 @@ SCRIPT = "lastfmnp"
 CONF_PREFIX = "plugins.var.python." + SCRIPT + "."
 CONFKEY_APIKEY = "apikey"
 CONFKEY_NPSTRING = "npstring"
+CONFKEY_NPSTRING_ALBUM = "npstring_album"
 CONFKEY_USER = "user"
 CONFKEY_NOTHING = "nothing"
 CONFKEY_QUIET = "quiet"
@@ -39,21 +40,25 @@ CONFKEY_QUIET = "quiet"
 def sayit(who, np, buffer):
     message = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_NPSTRING))
+    message_album = weechat.config_string(weechat.config_get(CONF_PREFIX
+        + CONFKEY_NPSTRING))
     nothing = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_NOTHING))
 
     if np:
         title = np.title
         artist = np.artist.name
-        if np.get_album():
-            album = np.get_album().get_title()
-        else:
-            album = "?"
+
         map = {u"[who]": who,
                 u"[artist]": artist,
-                u"[title]": title,
-                u"[album]": album}
-        saystr = unicode(message)
+                u"[title]": title}
+        if np.get_album():
+            album = np.get_album().get_title()
+            map[u"[album]"] = album
+            saystr = unicode(message_album)
+        else:
+            saystr = unicode(message)
+
         for k, v in map.items():
             saystr = saystr.replace(k, v)
     else:
@@ -89,6 +94,7 @@ weechat.hook_command("lastfmnp", "prints currently playing song",
 
 script_options = {
         CONFKEY_NPSTRING: "[who] is playing [artist] - [title]",
+        CONFKEY_NPSTRING_ALBUM: "[who] is playing [artist] - [title] ([album])",
         CONFKEY_APIKEY: "",
         CONFKEY_USER: "",
         CONFKEY_NOTHING: "[who] is not playing anything right now.",
