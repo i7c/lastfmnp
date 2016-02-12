@@ -55,32 +55,6 @@ def format_message(template, **kwargs):
     return result
 
 """
-    Says the retrieved np information to the buffer.
-"""
-def format_message_lastfm(np, buffer, **kwargs):
-    # get template strings from the config
-    message = weechat.config_string(weechat.config_get(CONF_PREFIX
-        + CONFKEY_NPSTRING))
-    message_album = weechat.config_string(weechat.config_get(CONF_PREFIX
-        + CONFKEY_NPSTRING_ALBUM))
-    message_nothing = weechat.config_string(weechat.config_get(CONF_PREFIX
-        + CONFKEY_NOTHING))
-
-    if np:
-        title = np.title
-        artist = np.artist.name
-        album = None
-        if np.get_album():
-            album = np.get_album().get_title()
-            say = format_message(message_album, artist=artist, title=title,
-                    album=album, **kwargs)
-        else:
-            say = format_message(message, artist=artist, title=title, **kwargs)
-    else:
-        say = format_message(message_nothing, **kwargs)
-    return say
-
-"""
     Retrieves the np information for who. If who is not set, retrieve for user
     set in the configuration opitons.
 """
@@ -89,14 +63,21 @@ def lastfm_retrieve(who = None):
         + CONFKEY_APIKEY))
     username = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_USER))
+    npinfo = {}
 
     network = pylast.LastFMNetwork(api_key = api_key)
     if who:
         user = network.get_user(who)
-        return user.get_now_playing()
     else:
         user = network.get_user(username)
-        return user.get_now_playing()
+    np = user.get_now_playing()
+    if not np:
+        return {}
+    npinfo["title"] = np.title
+    npinfo["artist"] = np.artist.name
+    if np.get_album():
+        npinfo["album"] = album = np.get_album().get_title()
+    return npinfo
 
 """
     Command to be called by weechat user: /lastfmnp
@@ -104,12 +85,24 @@ def lastfm_retrieve(who = None):
 def lastfmnp(data, buffer, args):
     who = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_WHO))
+    message_default = weechat.config_string(weechat.config_get(CONF_PREFIX
+        + CONFKEY_NPSTRING))
+    message_album = weechat.config_string(weechat.config_get(CONF_PREFIX
+        + CONFKEY_NPSTRING_ALBUM))
+    message_nothing = weechat.config_string(weechat.config_get(CONF_PREFIX
+        + CONFKEY_NOTHING))
 
     if len(args) > 0:
-        msg = format_message_lastfm(lastfm_retrieve(args), buffer,
-                who=unicode(args))
+        # which song is someone else playing (lastfmnp command with argument)
+        np = lastfm_retrieve(args)
+        msg = format_message(message_default, who=unicode(args), **np)
     else:
-        msg = format_message_lastfm(lastfm_retrieve(), buffer, who=unicode(who))
+        # which song am I playing?
+        np = lastfm_retrieve()
+        if "album" in np:
+            msg = format_message(message_album, who=unicode(who), **np)
+        else:
+            msg = format_message(message_default, who=unicode(who), **np)
     if len(msg) > 0:
         weechat.command(buffer, msg.encode("utf-8"))
     return weechat.WEECHAT_RC_OK
