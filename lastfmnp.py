@@ -121,11 +121,13 @@ def lastfmnp(data, buffer, args):
         + CONFKEY_NPSTRING))
     message_album = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_NPSTRING_ALBUM))
+    msg = ""
 
     if len(args) > 0:
         # which song is someone else playing (lastfmnp command with argument)
         np = lastfm_retrieve(args)
-        msg = format_message(message_default, who=unicode(args), **np)
+        if np:
+            msg = format_message(message_default, who=unicode(args), **np)
     else:
         # which song am I playing?
         np = lastfm_retrieve()
@@ -135,8 +137,10 @@ def lastfmnp(data, buffer, args):
             msg = format_message(message_default, who=unicode(who), **np)
         else:
             weechat.prnt("", "lastfmnp: API response was empty or invalid.")
-    if len(msg) > 0:
+    if msg:
         weechat.command(buffer, msg.encode("utf-8"))
+    else:
+        weechat.prnt("", "According to last.fm no song is playing right now.")
     return weechat.WEECHAT_RC_OK
 
 def tellnp(data, buffer, args):
@@ -148,10 +152,12 @@ def tellnp(data, buffer, args):
     message_tell = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_TELLSTRING))
     np = lastfm_retrieve()
-    msg = format_message(message_tell, who=unicode(who),
-            addressee=unicode(args), **np)
-    if len(msg) > 0:
+    if np:
+        msg = format_message(message_tell, who=unicode(who),
+                addressee=unicode(args), **np)
         weechat.command(buffer, msg.encode("utf-8"))
+    else:
+        weechat.prnt("", "According to last.fm no song is playing right now.")
     return weechat.WEECHAT_RC_OK
 
 """
