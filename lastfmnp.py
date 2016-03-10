@@ -56,6 +56,7 @@ Description:
 """
 import weechat
 import pylast
+import signal
 
 SCRIPT = "lastfmnp"
 CONF_PREFIX = "plugins.var.python." + SCRIPT + "."
@@ -97,12 +98,18 @@ def lastfm_retrieve(who = None):
         + CONFKEY_USER))
     npinfo = {}
 
+    def _timeout_handler(signum, frame):
+        raise IOError("Last.fm timed out")
+
+    signal.signal(signal.SIGALRM, _timeout_handler)
+    signal.alarm(2)
     network = pylast.LastFMNetwork(api_key = api_key)
     if who:
         user = network.get_user(who)
     else:
         user = network.get_user(username)
     np = user.get_now_playing()
+    signal.alarm(0)
     if not np:
         return {}
     npinfo["title"] = np.title
@@ -125,12 +132,20 @@ def lastfmnp(data, buffer, args):
 
     if len(args) > 0:
         # which song is someone else playing (lastfmnp command with argument)
-        np = lastfm_retrieve(args)
+        try:
+            np = lastfm_retrieve(args)
+        except:
+            weechat.prnt("", "last.fm does not respond (timeout)")
+            return weechat.WEECHAT_RC_ERROR;
         if np:
             msg = format_message(message_default, who=unicode(args), **np)
     else:
         # which song am I playing?
-        np = lastfm_retrieve()
+        try:
+            np = lastfm_retrieve()
+        except:
+            weechat.prnt("", "last.fm does not respond (timeout)")
+            return weechat.WEECHAT_RC_ERROR;
         if "album" in np:
             msg = format_message(message_album, who=unicode(who), **np)
         elif np:
