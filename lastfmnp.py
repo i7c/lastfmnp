@@ -64,6 +64,7 @@ CONFKEY_APIKEY = "apikey"
 CONFKEY_NPSTRING = "npstring"
 CONFKEY_NPSTRING_ALBUM = "npstring_album"
 CONFKEY_TELLSTRING="tellstring"
+CONFKEY_ARTISTSTRING="artist_string"
 CONFKEY_USER = "user"
 CONFKEY_WHO = "who"
 
@@ -144,6 +145,14 @@ def lastfm_np(who = None):
         npinfo["album"] = album = np.get_album().get_title()
     return npinfo
 
+def lastfm_top_artist():
+    net, user = obtain_fmuser()
+
+    timeout_begin()
+    topartist = user.get_top_artists(period=pylast.PERIOD_7DAYS, limit=1)
+    timeout_end()
+    return topartist[0][0]
+
 """
     Command to be called by weechat user: /lastfmnp
 """
@@ -201,6 +210,18 @@ def tellnp(data, buffer, args):
         weechat.prnt("", "According to last.fm no song is playing right now.")
     return weechat.WEECHAT_RC_OK
 
+def cmd_lastfm_artist(data, buffer, args):
+    message = weechat.config_string(weechat.config_get(CONF_PREFIX
+        + CONFKEY_ARTISTSTRING))
+
+    artist = lastfm_top_artist()
+    if artist:
+        msg = format_message(message, artist=artist.get_name())
+        weechat.command(buffer, msg.encode("utf-8"))
+    else:
+        weechat.prnt("", "Unexpected error from last.fm")
+    return weechat.WEECHAT_RC_OK
+
 """
     Initialization for Weechat
 """
@@ -211,6 +232,8 @@ weechat.hook_command("lastfmnp", "prints currently playing song",
         "[username]", "username: lastfm username", "lastfmnp", "lastfmnp", "")
 weechat.hook_command("tellnp", "tells a fellow user the currently playing song",
         "[nick]", "nick: the other user", "tellnp", "tellnp", "")
+weechat.hook_command("lastfm_artist", "show top artist of your last week",
+        "", "", "lastfm_artist", "cmd_lastfm_artist", "")
 
 script_options = {
         CONFKEY_NPSTRING: "[who] np: [artist] - [title]",
@@ -218,7 +241,8 @@ script_options = {
         CONFKEY_APIKEY: "",
         CONFKEY_USER: "",
         CONFKEY_TELLSTRING: "[addressee]: I'm np: [artist] - [title]",
-        CONFKEY_WHO: "/me"}
+        CONFKEY_WHO: "/me",
+        CONFKEY_ARTISTSTRING: "My artist of the week is [artist]."}
 
 for option, default in script_options.items():
     if not weechat.config_is_set_plugin(option):
