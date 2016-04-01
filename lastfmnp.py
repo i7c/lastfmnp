@@ -88,10 +88,24 @@ def format_message(template, **kwargs):
     return result
 
 """
-    Retrieves the np information for who. If who is not set, retrieve for user
-    set in the configuration opitons.
+    Callback for timeout
 """
-def lastfm_retrieve(who = None):
+def _timeout_handler(signum, frame):
+    raise IOError("A timeout protected section expired.")
+
+"""
+    Start timeout protected section
+"""
+def timeout_begin():
+    signal.signal(signal.SIGALRM, _timeout_handler)
+    signal.alarm(2)
+
+"""
+    End timeout protected section
+"""
+def timeout_end():
+    signal.alarm(0)
+
     api_key = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_APIKEY))
     username = weechat.config_string(weechat.config_get(CONF_PREFIX
