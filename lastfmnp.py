@@ -106,24 +106,34 @@ def timeout_begin():
 def timeout_end():
     signal.alarm(0)
 
+"""
+    Obtains and returns last.fm network and user objects of pylast.
+    If the API does not respond within given time, an exception is raised.
+"""
+def obtain_fmuser(who = None):
     api_key = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_APIKEY))
     username = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_USER))
-    npinfo = {}
 
-    def _timeout_handler(signum, frame):
-        raise IOError("Last.fm timed out")
-
-    signal.signal(signal.SIGALRM, _timeout_handler)
-    signal.alarm(2)
+    timeout_begin()
     network = pylast.LastFMNetwork(api_key = api_key)
     if who:
         user = network.get_user(who)
     else:
         user = network.get_user(username)
+    timeout_end()
+    return (network, user)
+
+"""
+    Retrieves the np information for who. If who is not set, retrieve for user
+    set in the configuration opitons.
+"""
+def lastfm_retrieve(who = None):
+    npinfo = {}
+
+    net, user = obtain_fmuser(who) 
     np = user.get_now_playing()
-    signal.alarm(0)
     if not np:
         return {}
     npinfo["title"] = np.title
