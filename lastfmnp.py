@@ -129,7 +129,7 @@ def obtain_fmuser(who = None):
     Retrieves the np information for who. If who is not set, retrieve for user
     set in the configuration opitons.
 """
-def lastfm_retrieve(who = None):
+def lastfm_np(who = None):
     npinfo = {}
 
     net, user = obtain_fmuser(who) 
@@ -159,7 +159,7 @@ def lastfmnp(data, buffer, args):
     if len(args) > 0:
         # which song is someone else playing (lastfmnp command with argument)
         try:
-            np = lastfm_retrieve(args)
+            np = lastfm_np(args)
         except:
             weechat.prnt("", "last.fm does not respond (timeout)")
             return weechat.WEECHAT_RC_ERROR;
@@ -168,7 +168,7 @@ def lastfmnp(data, buffer, args):
     else:
         # which song am I playing?
         try:
-            np = lastfm_retrieve()
+            np = lastfm_np()
         except:
             weechat.prnt("", "last.fm does not respond (timeout)")
             return weechat.WEECHAT_RC_ERROR;
@@ -192,7 +192,7 @@ def tellnp(data, buffer, args):
         + CONFKEY_WHO))
     message_tell = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_TELLSTRING))
-    np = lastfm_retrieve()
+    np = lastfm_np()
     if np:
         msg = format_message(message_tell, who=unicode(who),
                 addressee=unicode(args), **np)
