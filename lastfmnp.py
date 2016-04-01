@@ -133,7 +133,9 @@ def lastfm_retrieve(who = None):
     npinfo = {}
 
     net, user = obtain_fmuser(who) 
+    timeout_begin()
     np = user.get_now_playing()
+    timeout_end()
     if not np:
         return {}
     npinfo["title"] = np.title
