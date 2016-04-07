@@ -62,7 +62,6 @@ SCRIPT = "lastfmnp"
 CONF_PREFIX = "plugins.var.python." + SCRIPT + "."
 CONFKEY_APIKEY = "apikey"
 CONFKEY_NPSTRING = "npstring"
-CONFKEY_NPSTRING_ALBUM = "npstring_album"
 CONFKEY_TELLSTRING="tellstring"
 CONFKEY_ARTISTSTRING="artist_string"
 CONFKEY_USER = "user"
@@ -159,34 +158,19 @@ def lastfm_top_artist():
 def lastfmnp(data, buffer, args):
     who = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_WHO))
-    message_default = weechat.config_string(weechat.config_get(CONF_PREFIX
+    message_template = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_NPSTRING))
-    message_album = weechat.config_string(weechat.config_get(CONF_PREFIX
-        + CONFKEY_NPSTRING_ALBUM))
     msg = ""
 
-    if len(args) > 0:
-        # which song is someone else playing (lastfmnp command with argument)
-        try:
-            np = lastfm_np(args)
-        except:
-            weechat.prnt("", "last.fm does not respond (timeout)")
-            return weechat.WEECHAT_RC_ERROR;
-        if np:
-            msg = format_message(message_default, who=unicode(args), **np)
+    try:
+        np = lastfm_np()
+    except:
+        weechat.prnt("", "last.fm does not respond (timeout)")
+        return weechat.WEECHAT_RC_ERROR;
+    if np:
+        msg = format_message(message_template, who=unicode(who), **np)
     else:
-        # which song am I playing?
-        try:
-            np = lastfm_np()
-        except:
-            weechat.prnt("", "last.fm does not respond (timeout)")
-            return weechat.WEECHAT_RC_ERROR;
-        if "album" in np:
-            msg = format_message(message_album, who=unicode(who), **np)
-        elif np:
-            msg = format_message(message_default, who=unicode(who), **np)
-        else:
-            weechat.prnt("", "lastfmnp: API response was empty or invalid.")
+        weechat.prnt("", "lastfmnp: API response was empty or invalid.")
     if msg:
         weechat.command(buffer, msg.encode("utf-8"))
     else:
@@ -244,7 +228,6 @@ weechat.hook_command("lastfm_artist", "show top artist of your last week",
 
 script_options = {
         CONFKEY_NPSTRING: "[who] np: [artist] - [title]",
-        CONFKEY_NPSTRING_ALBUM: "[who] np: [artist] - [title] ([album])",
         CONFKEY_APIKEY: "",
         CONFKEY_USER: "",
         CONFKEY_TELLSTRING: "[addressee]: I'm np: [artist] - [title]",
