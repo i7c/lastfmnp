@@ -231,8 +231,6 @@ def cmd_lfm(data, buffer, args):
 weechat.register(SCRIPT, "i7c", "0.2", "GPL3",
         "Prints currently playing song from last.fm", "", "")
 
-weechat.hook_command("lastfmnp", "prints currently playing song",
-        "[username]", "username: lastfm username", "lastfmnp", "lastfmnp", "")
 weechat.hook_command("lastfm_artist", "show top artist of your last week",
         "", "", "lastfm_artist", "cmd_lastfm_artist", "")
 
