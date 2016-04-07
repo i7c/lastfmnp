@@ -186,13 +186,13 @@ def subcmd_np(data, buffer, args, **kwargs):
         weechat.prnt("", "According to last.fm no song is playing right now.")
     return weechat.WEECHAT_RC_OK
 
-def cmd_lastfm_artist(data, buffer, args):
+def subcmd_artist(data, buffer, args, **kwargs):
     message = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_ARTISTSTRING))
 
     artist = lastfm_top_artist()
     if artist:
-        msg = format_message(message, artist=artist.get_name())
+        msg = format_message(message, artist=artist.get_name(), **kwargs)
         weechat.command(buffer, msg.encode("utf-8"))
     else:
         weechat.prnt("", "Unexpected error from last.fm")
@@ -204,6 +204,13 @@ def _match_token(token, args):
         return True
     else:
         return False
+
+def subcmd_weekly(data, buffer, args, **kwargs):
+    if _match_token("artist", args):
+        return subcmd_artist(data, buffer, args, **kwargs)
+    else:
+        weechat.prnt("", "lastfmnp: Unknown subcommand " + args[0])
+        return weechat.WEECHAT_RC_ERROR;
 
 """
     /lfm command that takes arguments and does all the things!
@@ -217,8 +224,7 @@ def cmd_lfm(data, buffer, args):
     if _match_token("np", args):
         return subcmd_np(data, buffer, args, **options)
     elif _match_token("weekly", args):
-        weechat.prnt("", "lastfmnp: not implemented yet")
-        return weechat.WEECHAT_RC_ERROR;
+        return subcmd_weekly(data, buffer, args, **options)
     else:
         weechat.prnt("", "lastfmnp: Unknown command " + args[0])
         return weechat.WEECHAT_RC_ERROR;
@@ -240,7 +246,12 @@ weechat.hook_command("lfm",
         "* np        shows currently playing song\n"
         "* weekly    shows your weekly favourites\n\n"
         "You can prefix your command with tell <nick> to highlight someone.",
-        "", "", "np|weekly||tell %(nick) np|weekly", "cmd_lfm", "")
+        "",
+        "",
+        "np %-"
+        "|| weekly artist"
+        "|| tell %(nick) np|weekly artist",
+        "cmd_lfm", "")
 
 script_options = {
         CONFKEY_NPSTRING: "[who] listening to [artist] - [title]",
