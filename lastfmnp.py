@@ -62,7 +62,6 @@ SCRIPT = "lastfmnp"
 CONF_PREFIX = "plugins.var.python." + SCRIPT + "."
 CONFKEY_APIKEY = "apikey"
 CONFKEY_NPSTRING = "npstring"
-CONFKEY_TELLSTRING="tellstring"
 CONFKEY_ARTISTSTRING="artist_string"
 CONFKEY_USER = "user"
 CONFKEY_WHO = "who"
@@ -177,23 +176,6 @@ def lastfmnp(data, buffer, args):
         weechat.prnt("", "According to last.fm no song is playing right now.")
     return weechat.WEECHAT_RC_OK
 
-def tellnp(data, buffer, args):
-    if len(args) < 1:
-        weechat.prnt("", "tellnp needs one argument!")
-        return weechat.WEECHAT_RC_ERROR;
-    who = weechat.config_string(weechat.config_get(CONF_PREFIX
-        + CONFKEY_WHO))
-    message_tell = weechat.config_string(weechat.config_get(CONF_PREFIX
-        + CONFKEY_TELLSTRING))
-    np = lastfm_np()
-    if np:
-        msg = format_message(message_tell, who=unicode(who),
-                addressee=unicode(args), **np)
-        weechat.command(buffer, msg.encode("utf-8"))
-    else:
-        weechat.prnt("", "According to last.fm no song is playing right now.")
-    return weechat.WEECHAT_RC_OK
-
 def cmd_lastfm_artist(data, buffer, args):
     message = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_ARTISTSTRING))
@@ -221,8 +203,6 @@ weechat.register(SCRIPT, "i7c", "0.2", "GPL3",
 
 weechat.hook_command("lastfmnp", "prints currently playing song",
         "[username]", "username: lastfm username", "lastfmnp", "lastfmnp", "")
-weechat.hook_command("tellnp", "tells a fellow user the currently playing song",
-        "[nick]", "nick: the other user", "tellnp", "tellnp", "")
 weechat.hook_command("lastfm_artist", "show top artist of your last week",
         "", "", "lastfm_artist", "cmd_lastfm_artist", "")
 
@@ -230,7 +210,6 @@ script_options = {
         CONFKEY_NPSTRING: "[who] np: [artist] - [title]",
         CONFKEY_APIKEY: "",
         CONFKEY_USER: "",
-        CONFKEY_TELLSTRING: "[addressee]: I'm np: [artist] - [title]",
         CONFKEY_WHO: "/me",
         CONFKEY_ARTISTSTRING: "My artist of the week is [artist]."}
 
