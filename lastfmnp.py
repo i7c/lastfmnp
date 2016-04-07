@@ -79,13 +79,23 @@ REPLACE_MAP = {
     Formats an np string
 """
 def format_message(template, **kwargs):
+    who=""
+    prefix=""
+    # select who depending on whether tell is set or not
+    # also determine the prefix if tell is set
+    if "tell" in kwargs:
+        kwargs["who"] = weechat.config_string(weechat.config_get(CONF_PREFIX
+            + CONFKEY_WHO_MIDDLE))
+        prefix = kwargs["tell"] + ": "
+    else:
+        kwargs["who"] = weechat.config_string(weechat.config_get(CONF_PREFIX
+            + CONFKEY_WHO_START))
+
     result = template
     for k,v in kwargs.iteritems():
         if k in REPLACE_MAP:
             result = result.replace(REPLACE_MAP[k], v)
-        else:
-            weechat.prnt("", "Unknown key: " + k)
-    return result
+    return prefix + result
 
 """
     Callback for timeout
