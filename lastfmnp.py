@@ -64,7 +64,8 @@ CONFKEY_APIKEY = "apikey"
 CONFKEY_NPSTRING = "npstring"
 CONFKEY_ARTISTSTRING="artist_string"
 CONFKEY_USER = "user"
-CONFKEY_WHO = "who"
+CONFKEY_WHO_START = "who.start"
+CONFKEY_WHO_MIDDLE = "who.middle"
 
 REPLACE_MAP = {
         "who": u"[who]",
@@ -207,10 +208,11 @@ weechat.hook_command("lastfm_artist", "show top artist of your last week",
         "", "", "lastfm_artist", "cmd_lastfm_artist", "")
 
 script_options = {
-        CONFKEY_NPSTRING: "[who] np: [artist] - [title]",
+        CONFKEY_NPSTRING: "[who] listening to [artist] - [title]",
         CONFKEY_APIKEY: "",
         CONFKEY_USER: "",
-        CONFKEY_WHO: "/me",
+        CONFKEY_WHO_START: "/me",
+        CONFKEY_WHO_MIDDLE: "I'm",
         CONFKEY_ARTISTSTRING: "My artist of the week is [artist]."}
 
 for option, default in script_options.items():
