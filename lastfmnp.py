@@ -222,6 +222,13 @@ def cmd_lastfm_artist(data, buffer, args):
         weechat.prnt("", "Unexpected error from last.fm")
     return weechat.WEECHAT_RC_OK
 
+def _match_token(token, args):
+    if args[0] == token:
+        args.pop(0)
+        return True
+    else:
+        return False
+
 """
     Initialization for Weechat
 """
