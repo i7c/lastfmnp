@@ -165,9 +165,7 @@ def lastfm_top_artist():
 """
     Command to be called by weechat user: /lastfmnp
 """
-def lastfmnp(data, buffer, args):
-    who = weechat.config_string(weechat.config_get(CONF_PREFIX
-        + CONFKEY_WHO))
+def subcmd_np(data, buffer, args, **kwargs):
     message_template = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_NPSTRING))
     msg = ""
@@ -178,7 +176,8 @@ def lastfmnp(data, buffer, args):
         weechat.prnt("", "last.fm does not respond (timeout)")
         return weechat.WEECHAT_RC_ERROR;
     if np:
-        msg = format_message(message_template, who=unicode(who), **np)
+        np.update(kwargs)
+        msg = format_message(message_template, **np)
     else:
         weechat.prnt("", "lastfmnp: API response was empty or invalid.")
     if msg:
@@ -207,6 +206,26 @@ def _match_token(token, args):
         return False
 
 """
+    /lfm command that takes arguments and does all the things!
+"""
+def cmd_lfm(data, buffer, args):
+    options = {}
+    args = args.split()
+
+    if _match_token("tell", args):
+        options["tell"] = args.pop(0)
+    if _match_token("np", args):
+        return subcmd_np(data, buffer, args, **options)
+    elif _match_token("weekly", args):
+        weechat.prnt("", "lastfmnp: not implemented yet")
+        return weechat.WEECHAT_RC_ERROR;
+    else:
+        weechat.prnt("", "lastfmnp: Unknown command " + args[0])
+        return weechat.WEECHAT_RC_ERROR;
+    return weechat.WEECHAT_RC_OK
+
+
+"""
     Initialization for Weechat
 """
 weechat.register(SCRIPT, "i7c", "0.2", "GPL3",
@@ -216,6 +235,14 @@ weechat.hook_command("lastfmnp", "prints currently playing song",
         "[username]", "username: lastfm username", "lastfmnp", "lastfmnp", "")
 weechat.hook_command("lastfm_artist", "show top artist of your last week",
         "", "", "lastfm_artist", "cmd_lastfm_artist", "")
+
+weechat.hook_command("lfm",
+        "/lfm performs all kind of last.fm actions in your buffer.\n\n"
+        "Available commands:\n"
+        "* np        shows currently playing song\n"
+        "* weekly    shows your weekly favourites\n\n"
+        "You can prefix your command with tell <nick> to highlight someone.",
+        "", "", "np|weekly||tell %(nick) np|weekly", "cmd_lfm", "")
 
 script_options = {
         CONFKEY_NPSTRING: "[who] listening to [artist] - [title]",
