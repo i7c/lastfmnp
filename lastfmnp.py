@@ -81,12 +81,13 @@ REPLACE_MAP = {
 def format_message(template, **kwargs):
     who=""
     prefix=""
-    # select who depending on whether tell is set or not
-    # also determine the prefix if tell is set
+    # determine a possible prefix
     if "tell" in kwargs:
+        prefix = kwargs["tell"] + ": "
+    # select who depending on its position
+    if prefix or not template.startswith(REPLACE_MAP["who"]):
         kwargs["who"] = weechat.config_string(weechat.config_get(CONF_PREFIX
             + CONFKEY_WHO_MIDDLE))
-        prefix = kwargs["tell"] + ": "
     else:
         kwargs["who"] = weechat.config_string(weechat.config_get(CONF_PREFIX
             + CONFKEY_WHO_START))
