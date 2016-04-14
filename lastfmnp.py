@@ -63,6 +63,7 @@ CONF_PREFIX = "plugins.var.python." + SCRIPT + "."
 CONFKEY_APIKEY = "apikey"
 CONFKEY_NPSTRING = "npstring"
 CONFKEY_ARTISTSTRING="artist_string"
+CONFKEY_ALBUMSTRING="album_string"
 CONFKEY_USER = "user"
 CONFKEY_WHO_START = "who.start"
 CONFKEY_WHO_MIDDLE = "who.middle"
@@ -72,7 +73,9 @@ REPLACE_MAP = {
         "title": u"[title]",
         "artist": u"[artist]",
         "album": u"[album]",
-        "addressee": u"[addressee]"
+        "addressee": u"[addressee]",
+        "albumurl": u"[albumurl]",
+        "albumcover": u"[albumcover]"
         }
 
 """
@@ -163,6 +166,15 @@ def lastfm_top_artist():
     timeout_end()
     return topartist[0][0]
 
+def lastfm_top_album():
+    net, user = obtain_fmuser()
+
+    timeout_begin()
+    topalbum = user.get_top_albums(period=pylast.PERIOD_7DAYS, limit=1)
+    timeout_end()
+
+    return topalbum[0][0]
+
 """
     Command to be called by weechat user: /lastfmnp
 """
@@ -199,6 +211,20 @@ def subcmd_artist(data, buffer, args, **kwargs):
         weechat.prnt("", "Unexpected error from last.fm")
     return weechat.WEECHAT_RC_OK
 
+def subcmd_album(data, buffer, args, **kwargs):
+    message = weechat.config_string(weechat.config_get(CONF_PREFIX
+        + CONFKEY_ALBUMSTRING))
+
+    album = lastfm_top_album()
+    if album:
+        msg = format_message(message, album=album.get_name(),
+                albumurl=album.get_url(), albumcover=album.get_cover_image(),
+                **kwargs)
+        weechat.command(buffer, msg.encode("utf-8"))
+    else:
+        weechat.prnt("", "Unexpected error from last.fm")
+    return weechat.WEECHAT_RC_OK
+
 def _match_token(token, args):
     if args[0] == token:
         args.pop(0)
@@ -209,6 +235,8 @@ def _match_token(token, args):
 def subcmd_weekly(data, buffer, args, **kwargs):
     if _match_token("artist", args):
         return subcmd_artist(data, buffer, args, **kwargs)
+    elif _match_token("album", args):
+        return subcmd_album(data, buffer, args, **kwargs)
     else:
         weechat.prnt("", "lastfmnp: Unknown subcommand " + args[0])
         return weechat.WEECHAT_RC_ERROR;
@@ -247,8 +275,8 @@ weechat.hook_command("lfm",
         "",
         "",
         "np %-"
-        "|| weekly artist"
-        "|| tell %(nick) np|weekly artist",
+        "|| weekly artist|album"
+        "|| tell %(nick) np|weekly artist|album",
         "cmd_lfm", "")
 
 script_options = {
@@ -257,7 +285,8 @@ script_options = {
         CONFKEY_USER: "",
         CONFKEY_WHO_START: "/me",
         CONFKEY_WHO_MIDDLE: "I'm",
-        CONFKEY_ARTISTSTRING: "My artist of the week is [artist]."}
+        CONFKEY_ARTISTSTRING: "My artist of the week is [artist].",
+        CONFKEY_ALBUMSTRING: "My album of the week is [album]."}
 
 for option, default in script_options.items():
     if not weechat.config_is_set_plugin(option):
