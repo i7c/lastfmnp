@@ -219,7 +219,7 @@ def subcmd_album(data, buffer, args, **kwargs):
     if album:
         msg = format_message(message, album=album.get_name(),
                 albumurl=album.get_url(), albumcover=album.get_cover_image(),
-                **kwargs)
+                artist=album.get_artist().get_name(), **kwargs)
         weechat.command(buffer, msg.encode("utf-8"))
     else:
         weechat.prnt("", "Unexpected error from last.fm")
@@ -286,7 +286,7 @@ script_options = {
         CONFKEY_WHO_START: "/me",
         CONFKEY_WHO_MIDDLE: "I'm",
         CONFKEY_ARTISTSTRING: "My artist of the week is [artist].",
-        CONFKEY_ALBUMSTRING: "My album of the week is [album]."}
+        CONFKEY_ALBUMSTRING: "My album of the week is [album] by [artist]."}
 
 for option, default in script_options.items():
     if not weechat.config_is_set_plugin(option):
