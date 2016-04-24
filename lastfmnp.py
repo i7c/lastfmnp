@@ -124,14 +124,15 @@ def timeout_end():
     Obtains and returns last.fm network and user objects of pylast.
     If the API does not respond within given time, an exception is raised.
 """
-def obtain_fmuser(who = None):
+def obtain_fmuser(who = None, network = None):
     api_key = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_APIKEY))
     username = weechat.config_string(weechat.config_get(CONF_PREFIX
         + CONFKEY_USER))
 
     timeout_begin()
-    network = pylast.LastFMNetwork(api_key = api_key)
+    if not network:
+        network = pylast.LastFMNetwork(api_key = api_key)
     if who:
         user = network.get_user(who)
     else:
