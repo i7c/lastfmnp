@@ -243,6 +243,18 @@ def _match_word(args):
     else:
         return (None, args)
 
+def _match_list_or_word(args):
+    match = re.match('\([^\(\)]*\)', args)
+    if match:
+        lst = re.split('[, \t]*', match.group(0)[1:-1])
+        return (lst, re.sub('\([^\(\)]*\)[ \t]*', '', args, count=1))
+    else:
+        (word, args) = _match_word(args)
+        if word:
+            return ([word], args)
+    return (None, args)
+
+
 def subcmd_weekly(data, buffer, args, **kwargs):
     if _match_token("artist", args):
         return subcmd_artist(data, buffer, args, **kwargs)
@@ -260,8 +272,10 @@ def cmd_lfm(data, buffer, args):
 
     (res, args) = _match_token("tell", args)
     if res:
-        (options["tell"], args)  = _match_word(args)
-        if not options["tell"]:
+        (lst, args) = _match_list_or_word(args)
+        if lst:
+            options["tell"] = ', '.join(lst)
+        if not lst:
             weechat.prnt("", "lastfmnp: imcomplete command")
             return weechat.WEECHAT_RC_ERROR
 
