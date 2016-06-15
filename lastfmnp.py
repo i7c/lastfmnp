@@ -57,6 +57,7 @@ Description:
 import weechat
 import pylast
 import signal
+import re
 
 SCRIPT = "lastfmnp"
 CONF_PREFIX = "plugins.var.python." + SCRIPT + "."
@@ -227,11 +228,20 @@ def subcmd_album(data, buffer, args, **kwargs):
     return weechat.WEECHAT_RC_OK
 
 def _match_token(token, args):
-    if args[0] == token:
-        args.pop(0)
-        return True
+    bits = re.split('[ \t]*', args)
+    if bits[0] == token:
+        args = re.sub(token + "[ \t]*", '', args, count=1)
+        return (True, args)
     else:
-        return False
+        return (False, args)
+
+def _match_word(args):
+    bits = re.split('[ \t]*', args)
+    if bits[0]:
+        args = re.sub(bits[0] + "[ \t]*", '', args, count=1)
+        return (bits[0], args)
+    else:
+        return (None, args)
 
 def subcmd_weekly(data, buffer, args, **kwargs):
     if _match_token("artist", args):
@@ -247,13 +257,19 @@ def subcmd_weekly(data, buffer, args, **kwargs):
 """
 def cmd_lfm(data, buffer, args):
     options = {}
-    args = args.split()
 
-    if _match_token("tell", args):
-        options["tell"] = args.pop(0)
-    if _match_token("np", args):
+    (res, args) = _match_token("tell", args)
+    if res:
+        (options["tell"], args)  = _match_word(args)
+        if not options["tell"]:
+            weechat.prnt("", "lastfmnp: imcomplete command")
+            return weechat.WEECHAT_RC_ERROR
+
+    (res, args) = _match_token("np", args)
+    if res:
         return subcmd_np(data, buffer, args, **options)
-    elif _match_token("weekly", args):
+    (res, args) = _match_token("weekly", args)
+    if res:
         return subcmd_weekly(data, buffer, args, **options)
     else:
         weechat.prnt("", "lastfmnp: Unknown command " + args[0])
