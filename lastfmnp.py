@@ -185,6 +185,8 @@ def subcmd_np(data, buffer, args, **kwargs):
         + CONFKEY_NPSTRING))
     msg = ""
 
+    if not _match_eol(args):
+        weechat.prnt("", "lastfmnp.np: ignoring spurious arguments: " + args)
     try:
         np = lastfm_np()
     except:
@@ -254,11 +256,21 @@ def _match_list_or_word(args):
             return ([word], args)
     return (None, args)
 
+def _match_eol(args):
+    return not bool(args.strip())
 
 def subcmd_weekly(data, buffer, args, **kwargs):
-    if _match_token("artist", args):
+    (res, args) = _match_token("artist", args)
+    if res:
+        if not _match_eol(args):
+            weechat.prnt("", "lastfmnp.weekly: ignoring spurious arguments: " + 
+                    args)
         return subcmd_artist(data, buffer, args, **kwargs)
-    elif _match_token("album", args):
+    (res, args) = _match_token("album", args)
+    if res:
+        if not _match_eol(args):
+            weechat.prnt("", "lastfmnp.weekly: ignoring spurious arguments: " +
+                    args)
         return subcmd_album(data, buffer, args, **kwargs)
     else:
         weechat.prnt("", "lastfmnp: Unknown subcommand " + args[0])
