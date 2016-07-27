@@ -41,6 +41,7 @@ my $lfmparser = qr{
 		| <take>
 		| <extract>
 		| <format>
+		| <dump>
 		| <tell>
 
 
@@ -70,9 +71,12 @@ my $lfmparser = qr{
 	<rule: fpattern>
 		[^"]+
 
+	#### Dump ####
+	<rule: dump>
+		dump
+
 	#### Tell Command ####
 	<rule: tell> <[highlight]>+
-
 
 	#### Names ####
 	<rule: highlight> @<name> (?{ $MATCH=$MATCH{name}; })
@@ -178,6 +182,12 @@ sub uc_format {
 	return format_output($options->{fpattern}, $data);
 }
 
+sub uc_dump {
+	my $options = shift;
+	my $data = shift;
+	return Dumper($data);
+}
+
 sub uc_tell {
 	my $options = shift;
 	my $text = shift;
@@ -196,11 +206,12 @@ sub process_command {
 
 	my %callmap = (
 		"np" => \&uc_np,
-		"tell" => \&uc_tell,
 		"recent_tracks" => \&uc_recent_tracks,
 		"take" => \&uc_take,
 		"extract" => \&uc_extract,
 		"format" => \&uc_format,
+		"dump" => \&uc_dump,
+		"tell" => \&uc_tell,
 	);
 
 	for my $key (keys %{ $cmd } ) {
