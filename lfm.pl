@@ -193,6 +193,8 @@ sub uc_np {
 		extract_track_info(array_take(
 				lfm_user_get_recent_tracks($user, 1), 0));
 
+	if ($flags{"PLAYING"} && ! $result->{active}) { return ""; }
+
 	return format_output($fpattern, $result);
 }
 
