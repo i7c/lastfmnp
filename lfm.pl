@@ -45,6 +45,7 @@ my $lfmparser = qr{
 	<rule: command>
 		<np>
 		| <recent_tracks>
+		| <user>
 		| <take>
 		| <extract>
 		| <format>
@@ -63,13 +64,18 @@ my $lfmparser = qr{
 	<rule: recent_tracks>
 		tracks <user=name> <amount=number>
 
+	#### User ####
+	<rule: user>
+		user <name>? <ws>
+
 	#### Take Array element ####
 	<rule: take>
 		take <index=number>
 
 	#### Extract track info from track lement####
 	<rule: extract>
-		extract
+		extract track
+		| extract user
 
 	#### Format command ####
 	<rule: format>
@@ -130,6 +136,12 @@ sub lfm_user_get_recent_tracks {
 	return $apires->{recenttracks}->{track};
 }
 
+sub lfm_user_get_info {
+	my $user = shift;
+	my $apires = lfmjson("user.getInfo", {user => $user});
+	return $apires->{user};
+}
+
 sub array_take {
 	my $array = shift;
 	my $which = shift;
@@ -153,6 +165,23 @@ sub extract_track_info {
 	return $data;
 }
 
+sub extract_user_info {
+	my $userinfo = shift;
+
+	my $data = {};
+	if (my $user = $userinfo) {
+		$data->{gender} = $userinfo->{gender};
+		$data->{age} = $userinfo->{age};
+		$data->{url} = $userinfo->{url};
+		$data->{playcount} = $userinfo->{playcount};
+		$data->{country} = $userinfo->{country};
+		$data->{name} = $userinfo->{name};
+		$data->{playlists} = $userinfo->{playlists};
+		$data->{registered} = $userinfo->{registered}->{unixtime};
+	}
+	return $data;
+}
+
 #### User Commands ####
 sub uc_np {
 	my $options = shift;
@@ -172,6 +201,14 @@ sub uc_recent_tracks {
 	return lfm_user_get_recent_tracks($options->{user}, $options->{amount});
 }
 
+sub uc_user {
+	my $options = shift;
+
+	my $user = $options->{name} // weechat::config_string(cnf("user"));
+	my $userinfo = lfm_user_get_info($user);
+	return $userinfo;
+}
+
 sub uc_take {
 	my $options = shift;
 	my $array = shift;
@@ -180,8 +217,13 @@ sub uc_take {
 
 sub uc_extract {
 	my $options = shift;
-	my $trackinfo = shift;
-	return extract_track_info($trackinfo);
+	my $info = shift;
+
+	if ($options =~ /extract track/) {
+		return extract_track_info($info);
+	} elsif ($options =~ /extract user/) {
+		return extract_user_info($info);
+	}
 }
 
 sub uc_format {
@@ -194,7 +236,8 @@ sub uc_format {
 sub uc_dump {
 	my $options = shift;
 	my $data = shift;
-	return Dumper($data);
+	weechat::print("", Dumper($data));
+	return "";
 }
 
 sub uc_tell {
@@ -216,6 +259,7 @@ sub process_command {
 	my %callmap = (
 		"np" => \&uc_np,
 		"recent_tracks" => \&uc_recent_tracks,
+		"user" => \&uc_user,
 		"take" => \&uc_take,
 		"extract" => \&uc_extract,
 		"format" => \&uc_format,
@@ -257,7 +301,7 @@ sub lfm {
 	my $data = shift;
 	my $buffer = shift;
 	my $args = shift;
-	weechat::print($buffer, process_input($args));
+	weechat::command($buffer, process_input($args));
 }
 
 if ($ARGV[0] && $ARGV[0] =~ /cli/i) {
