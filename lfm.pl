@@ -6,13 +6,20 @@ use strict;
 use warnings;
 
 use constant BASE_URL => 'https://ws.audioscrobbler.com/2.0/?';
-my $apikey = "";
+my $prgname = "lfm";
+my $confprefix = "plugins.var.perl.$prgname";
 
 binmode(STDOUT, ":utf8");
+
+sub cnf {
+	my $option = shift;
+	return weechat::config_get("$confprefix.$option");
+}
 
 sub lfmjson {
 	my $method = shift;
 	my $params = shift;
+	my $apikey = weechat::config_string(cnf("apikey"));
 	my $url = BASE_URL . "format=json&api_key=$apikey&method=$method";
 	my $ua = LWP::UserAgent->new;
 	$ua->agent("lastfmnp/0.0");
@@ -47,7 +54,7 @@ my $lfmparser = qr{
 
 	#### NP Command ####
 	<rule: np>
-		np <[np_flags]>* <np_user=(\w+)>? ("<np_fpattern=fpattern>")?
+		np <[np_flags]>* <np_user=(\w+)>? ("<np_fpattern=fpattern>")? <ws>
 
 	<rule: np_flags>
 		(-n|--np-only)(?{$MATCH="PLAYING";})
@@ -150,12 +157,14 @@ sub extract_track_info {
 sub uc_np {
 	my $options = shift;
 	my %flags = map { $_ => 1 }  @{ $options->{np_flags} };
+	my $user = $options->{np_user} // weechat::config_string(cnf("user"));
+	my $fpattern = $options->{np_fpattern} // weechat::config_string(cnf("np_fpattern"));
 
 	my $result =
 		extract_track_info(array_take(
-				lfm_user_get_recent_tracks($options->{np_user}, 1), 0));
+				lfm_user_get_recent_tracks($user, 1), 0));
 
-	return format_output($options->{np_fpattern}, $result);
+	return format_output($fpattern, $result);
 }
 
 sub uc_recent_tracks {
@@ -240,7 +249,7 @@ sub process_input {
 			#TODO: error case
 		}
 	} else {
-		# Handle error
+		weechat::print("", "lfm: Input error");
 	}
 }
 
@@ -248,14 +257,13 @@ sub lfm {
 	my $data = shift;
 	my $buffer = shift;
 	my $args = shift;
-
 	weechat::print($buffer, process_input($args));
 }
 
 if ($ARGV[0] && $ARGV[0] =~ /cli/i) {
 	print process_input($ARGV[1]);
 } else {
-	weechat::register("lfm", "i7c", "0.3", "GPLv3", "Prints last.fm shit", "", "");
+	weechat::register("lfm", "i7c", "0.3", "GPL3", "Prints last.fm shit", "", "");
 	weechat::hook_command("lfm", "performs lastfm shit",
 		"lfm",
 		"",
