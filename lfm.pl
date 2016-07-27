@@ -72,15 +72,16 @@ sub format_output {
 		($varlist, $scheme, $rest) = $pattern =~ m/\{([\w\s]+):([^\{\}]*)\}(.*)/g;
 		$pattern = $rest;
 
-		if (! $varlist || ! $scheme) {return "";}
-
-		my @vars = split(/\s+/, $varlist);
-		foreach my $x (@vars) {
-			if ($params->{$x}) {
-				$scheme =~ s/%$x/$params->{$x}/g;
+		if ($varlist && $scheme) {
+			my @vars = split(/\s+/, $varlist);
+			my $valid = 1;
+			foreach my $x (@vars) {
+				if ($params->{$x}) {
+					$scheme =~ s/%$x/$params->{$x}/g;
+				} else { $valid = 0; }
 			}
+			$result .= $scheme if $valid;
 		}
-		$result .= $scheme;
 	}
 	return $result;
 }
