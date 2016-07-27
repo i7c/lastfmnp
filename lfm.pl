@@ -115,13 +115,24 @@ sub uc_np {
 	return format_output($options->{np_fpattern}, $result);
 }
 
+sub uc_tell {
+	my $options = shift;
+	my $text = shift;
+
+	my @nicks = @{ $options->{highlight} };
+	my $nickstring = join(", ", @nicks);
+	return format_output("{nicks text:%nicks: %text}", { nicks => $nickstring,
+			text => $text});
+}
+
 sub process_command {
 	my $cmd = shift;
 	my $prev = shift;
 
-	if ($cmd->{np}) {
-		return uc_np($cmd->{np});
-	} elsif ($cmd->{tell}) {
+	if (my $np = $cmd->{np}) {
+		return uc_np($np);
+	} elsif (my $tell = $cmd->{tell}) {
+		return uc_tell($tell, $prev);
 	}
 
 }
