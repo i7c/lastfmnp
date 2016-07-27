@@ -59,6 +59,33 @@ my $lfmparser = qr{
 
 };
 
+sub format_output {
+	my $pattern = shift;
+	my $params = shift;
+	my $scheme;
+	my $varlist;
+	my $rest;
+	my $result;
+
+	while ($pattern) {
+		# get next { } group
+		($varlist, $scheme, $rest) = $pattern =~ m/\{([\w\s]+):([^\{\}]*)\}(.*)/g;
+		$pattern = $rest;
+
+		my $valid = 1;
+		my @vars = split(/\s+/, $varlist);
+		foreach my $x (@vars) {
+			if (! $params->{$x}) {
+				$valid = 0
+			} else {
+				$scheme =~ s/%$x/$params->{$x}/g;
+			}
+		}
+		$result .= $scheme;
+	}
+	return $result;
+}
+
 sub lfm_np {
 	my $user = shift;
 	my $limit = shift;
