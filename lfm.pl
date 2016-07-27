@@ -248,6 +248,10 @@ sub lfm {
 	weechat::print("", "hihihi");
 }
 
-weechat::register("lfm", "i7c", "0.3", "GPLv3", "Prints last.fm shit", "", "");
-weechat::hook_comand("lfm", "/lfm performs lastfm shit", "", "", "lfm", "");
+if ($ARGV[0] =~ /cli/i) {
+	print process_input($ARGV[1]);
+} else {
+	weechat::register("lfm", "i7c", "0.3", "GPLv3", "Prints last.fm shit", "", "");
+	weechat::hook_comand("lfm", "/lfm performs lastfm shit", "", "", "lfm", "");
+}
 
