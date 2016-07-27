@@ -245,13 +245,21 @@ sub process_input {
 }
 
 sub lfm {
-	weechat::print("", "hihihi");
+	my $data = shift;
+	my $buffer = shift;
+	my $args = shift;
+
+	weechat::print($buffer, process_input($args));
 }
 
-if ($ARGV[0] =~ /cli/i) {
+if ($ARGV[0] && $ARGV[0] =~ /cli/i) {
 	print process_input($ARGV[1]);
 } else {
 	weechat::register("lfm", "i7c", "0.3", "GPLv3", "Prints last.fm shit", "", "");
-	weechat::hook_comand("lfm", "/lfm performs lastfm shit", "", "", "lfm", "");
+	weechat::hook_command("lfm", "performs lastfm shit",
+		"lfm",
+		"",
+		"",
+		"lfm", "");
 }
 
