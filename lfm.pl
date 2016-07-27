@@ -25,12 +25,6 @@ sub lfmjson {
 	return decode_json($res->content);
 };
 
-sub lfm_np {
-	my $user = shift;
-	return lfmjson("user.getRecentTracks", {user => $user});
-}
-
-
 my $lfmparser = qr{
 	<lfm>
 
@@ -46,10 +40,10 @@ my $lfmparser = qr{
 		| <tell>
 
 
-	# Tell Command
+	#### Tell Command ####
 	<rule: tell> <[highlight]>+
 
-	# NP Command
+	#### NP Command ####
 	<rule: np>
 		np <[np_flags]>* <np_user=(\w+)>? ("<np_fpattern>")?
 
@@ -59,18 +53,18 @@ my $lfmparser = qr{
 	<rule: np_fpattern>
 		[^"]+
 
-	# Names
+	#### Names ####
 	<rule: highlight> @<name> (?{ $MATCH=$MATCH{name}; })
 	<rule: name> [a-zA-Z0-9_`\[\]]+
 
 };
 
-sub command_np {
-	my $options = shift;
-	my %flags = map { $_ => 1 }  @{ $options->{np_flags} };
+sub lfm_np {
+	my $user = shift;
+	my $limit = shift;
 
 	my $apires = lfmjson("user.getRecentTracks",
-		{user => $options->{np_user}, limit => 1 });
+		{user => $user, limit => $limit });
 
 	my $data = {};
 	if (my $track = $apires->{recenttracks}->{track}[0]) {
@@ -83,14 +77,13 @@ sub command_np {
 		$data->{albumId} = $track->{album}->{mbid};
 		$data->{active} = 1 if ($track->{'@attr'}->{nowplaying})
 	}
+	return $data;
+}
 
-	if ($flags{PLAYING} && ! $data->{active}) {
-		# Do nothing if not active and -n is set
-		return "";
-	}
-
-
-	print Dumper($data);
+sub uc_np {
+	my $options = shift;
+	my %flags = map { $_ => 1 }  @{ $options->{np_flags} };
+	my $result = lfm_np($options->{np_user}, 1);
 }
 
 sub process_command {
@@ -98,7 +91,7 @@ sub process_command {
 	my $prev = shift;
 
 	if ($cmd->{np}) {
-		return command_np($cmd->{np});
+		return uc_np($cmd->{np});
 	} elsif ($cmd->{tell}) {
 	}
 
@@ -113,15 +106,18 @@ sub process_input {
 
 		if (my $cmdchain = $lfm->{cmdchain} ) {
 			# Command Chain
-			my $previous = "";
+			my $previous;
 			foreach my $cmd (@{$cmdchain}) {
 				$previous = process_command($cmd, $previous);
 			}
+			return $previous;
 		} elsif (my $cmdlist = $lfm->{cmdlist} ) {
 			# Command List
+			my $last;
 			foreach my $cmd (@{$cmdlist}) {
-				process_command($cmd);
+				$last = process_command($cmd);
 			}
+			return $last;
 		} else {
 			#TODO: error case
 		}
@@ -131,4 +127,4 @@ sub process_input {
 }
 
 
-process_input($ARGV[0]);
+print (process_input($ARGV[0]));
