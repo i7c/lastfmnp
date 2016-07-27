@@ -8,6 +8,8 @@ use warnings;
 use constant BASE_URL => 'https://ws.audioscrobbler.com/2.0/?';
 my $apikey = "";
 
+binmode(STDOUT, ":utf8");
+
 sub lfmjson {
 	my $method = shift;
 	my $params = shift;
@@ -166,5 +168,10 @@ sub process_input {
 	}
 }
 
+sub lfm {
+	weechat::print("", "hihihi");
+}
 
-print (process_input($ARGV[0]));
+weechat::register("lfm", "i7c", "0.3", "GPLv3", "Prints last.fm shit", "", "");
+weechat::hook_comand("lfm", "/lfm performs lastfm shit", "", "", "lfm", "");
+
