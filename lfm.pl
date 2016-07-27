@@ -33,29 +33,53 @@ my $lfmparser = qr{
 	<rule: lfm>
 		<[cmdchain=command]>+ % <.chainsep>
 
-	<token: chainsep> \.\.\. | ~
+	<token: chainsep> \.\.\. | ~ | \|
 
 	<rule: command>
 		<np>
+		| <recent_tracks>
+		| <take>
+		| <extract>
+		| <format>
 		| <tell>
 
 
-	#### Tell Command ####
-	<rule: tell> <[highlight]>+
-
 	#### NP Command ####
 	<rule: np>
-		np <[np_flags]>* <np_user=(\w+)>? ("<np_fpattern>")?
+		np <[np_flags]>* <np_user=(\w+)>? ("<np_fpattern=fpattern>")?
 
 	<rule: np_flags>
 		(-n|--np-only)(?{$MATCH="PLAYING";})
 
-	<rule: np_fpattern>
+	#### Retrieve recent tracks ####
+	<rule: recent_tracks>
+		tracks <user=name> <amount=number>
+
+	#### Take Array element ####
+	<rule: take>
+		take <index=number>
+
+	#### Extract track info from track lement####
+	<rule: extract>
+		extract
+
+	#### Format command ####
+	<rule: format>
+		format "<fpattern>"
+
+	<rule: fpattern>
 		[^"]+
+
+	#### Tell Command ####
+	<rule: tell> <[highlight]>+
+
 
 	#### Names ####
 	<rule: highlight> @<name> (?{ $MATCH=$MATCH{name}; })
 	<rule: name> [a-zA-Z0-9_`\[\]]+
+
+	#### Numbers ####
+	<rule: number> [0-9]+
 
 };
 
@@ -86,15 +110,26 @@ sub format_output {
 	return $result;
 }
 
-sub lfm_np {
+sub lfm_user_get_recent_tracks {
 	my $user = shift;
 	my $limit = shift;
 
 	my $apires = lfmjson("user.getRecentTracks",
 		{user => $user, limit => $limit });
+	return $apires->{recenttracks}->{track};
+}
+
+sub array_take {
+	my $array = shift;
+	my $which = shift;
+	return @{$array}[$which];
+}
+
+sub extract_track_info {
+	my $trackinfo = shift;
 
 	my $data = {};
-	if (my $track = $apires->{recenttracks}->{track}[0]) {
+	if (my $track = $trackinfo) {
 		$data->{title} = $track->{name};
 		$data->{id} = $track->{mbid};
 		$data->{artist} = $track->{artist}->{"#text"};
@@ -107,12 +142,40 @@ sub lfm_np {
 	return $data;
 }
 
+#### User Commands ####
 sub uc_np {
 	my $options = shift;
 	my %flags = map { $_ => 1 }  @{ $options->{np_flags} };
-	my $result = lfm_np($options->{np_user}, 1);
+
+	my $result =
+		extract_track_info(array_take(
+				lfm_user_get_recent_tracks($options->{np_user}, 1), 0));
 
 	return format_output($options->{np_fpattern}, $result);
+}
+
+sub uc_recent_tracks {
+	my $options = shift;
+	return lfm_user_get_recent_tracks($options->{user}, $options->{amount});
+}
+
+sub uc_take {
+	my $options = shift;
+	my $array = shift;
+	return array_take($array, $options->{index});
+}
+
+sub uc_extract {
+	my $options = shift;
+	my $trackinfo = shift;
+	return extract_track_info($trackinfo);
+}
+
+sub uc_format {
+	my $options = shift;
+	my $data = shift;
+
+	return format_output($options->{fpattern}, $data);
 }
 
 sub uc_tell {
@@ -125,13 +188,19 @@ sub uc_tell {
 			text => $text});
 }
 
+
+#### Command Processing Machinery ####
 sub process_command {
 	my $cmd = shift;
 	my $prev = shift;
 
 	my %callmap = (
 		"np" => \&uc_np,
-		"tell" => \&uc_tell
+		"tell" => \&uc_tell,
+		"recent_tracks" => \&uc_recent_tracks,
+		"take" => \&uc_take,
+		"extract" => \&uc_extract,
+		"format" => \&uc_format,
 	);
 
 	for my $key (keys %{ $cmd } ) {
