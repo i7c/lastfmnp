@@ -72,12 +72,11 @@ sub format_output {
 		($varlist, $scheme, $rest) = $pattern =~ m/\{([\w\s]+):([^\{\}]*)\}(.*)/g;
 		$pattern = $rest;
 
-		my $valid = 1;
+		if (! $varlist || ! $scheme) {return "";}
+
 		my @vars = split(/\s+/, $varlist);
 		foreach my $x (@vars) {
-			if (! $params->{$x}) {
-				$valid = 0
-			} else {
+			if ($params->{$x}) {
 				$scheme =~ s/%$x/$params->{$x}/g;
 			}
 		}
@@ -111,6 +110,8 @@ sub uc_np {
 	my $options = shift;
 	my %flags = map { $_ => 1 }  @{ $options->{np_flags} };
 	my $result = lfm_np($options->{np_user}, 1);
+
+	return format_output($options->{np_fpattern}, $result);
 }
 
 sub process_command {
