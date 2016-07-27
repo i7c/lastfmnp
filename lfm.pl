@@ -31,11 +31,9 @@ my $lfmparser = qr{
 	<lfm>
 
 	<rule: lfm>
-		<[cmdlist=command]>+ % <.listsep>
-		| : <[cmdchain=command]>+ % <.chainsep>
+		<[cmdchain=command]>+ % <.chainsep>
 
-	<token: listsep> ;
-	<token: chainsep> \.\.\.
+	<token: chainsep> \.\.\. | ~
 
 	<rule: command>
 		<np>
@@ -131,12 +129,17 @@ sub process_command {
 	my $cmd = shift;
 	my $prev = shift;
 
-	if (my $np = $cmd->{np}) {
-		return uc_np($np);
-	} elsif (my $tell = $cmd->{tell}) {
-		return uc_tell($tell, $prev);
-	}
+	my %callmap = (
+		"np" => \&uc_np,
+		"tell" => \&uc_tell
+	);
 
+	for my $key (keys %{ $cmd } ) {
+		if ($key && $callmap{$key}) {
+			my $result = $callmap{$key}->($cmd->{$key}, $prev);
+			return $result;
+		}
+	}
 }
 
 sub process_input {
@@ -153,13 +156,6 @@ sub process_input {
 				$previous = process_command($cmd, $previous);
 			}
 			return $previous;
-		} elsif (my $cmdlist = $lfm->{cmdlist} ) {
-			# Command List
-			my $last;
-			foreach my $cmd (@{$cmdlist}) {
-				$last = process_command($cmd);
-			}
-			return $last;
 		} else {
 			#TODO: error case
 		}
