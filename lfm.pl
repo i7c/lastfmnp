@@ -60,7 +60,10 @@ my $lfmparser = qr{
 		np <[np_flags]>* <np_user=(\w+)>? ("<np_fpattern=fpattern>")? <ws>
 
 	<rule: np_flags>
-		(-n|--np-only)(?{$MATCH="PLAYING";})
+		(-a|--artist)(?{$MATCH="ARTIST";})
+		| (-t|--title)(?{$MATCH="TITLE";})
+		| (-A|--album)(?{$MATCH="ALBUM";})
+		| (-n|--np-only)(?{$MATCH="PLAYING";})
 
 	#### Retrieve recent tracks ####
 	<rule: recent_tracks>
@@ -233,6 +236,10 @@ sub uc_np {
 				lfm_user_get_recent_tracks($user, 1), 0));
 
 	if ($flags{"PLAYING"} && ! $result->{active}) { return ""; }
+
+	$fpattern = "{album:%album}" if ($flags{"ALBUM"});
+	$fpattern = "{title:%title}" if ($flags{"TITLE"});
+	$fpattern = "{artist:%artist}" if ($flags{"ARTIST"});
 
 	return format_output($fpattern, $result);
 }
