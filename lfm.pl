@@ -46,6 +46,7 @@ my $lfmparser = qr{
 		<np>
 		| <recent_tracks>
 		| <user>
+		| <artist>
 		| <take>
 		| <extract>
 		| <format>
@@ -67,6 +68,10 @@ my $lfmparser = qr{
 	#### User ####
 	<rule: user>
 		user <name>? <ws>
+
+	#### Artist ####
+	<rule: artist>
+		artist <name>
 
 	#### Take Array element ####
 	<rule: take>
@@ -93,7 +98,7 @@ my $lfmparser = qr{
 
 	#### Names ####
 	<rule: highlight> @<name> (?{ $MATCH=$MATCH{name}; })
-	<rule: name> [a-zA-Z0-9_`\[\]]+
+	<rule: name> [a-zA-Z0-9_`\[\]-]+
 
 	#### Numbers ####
 	<rule: number> [0-9]+
@@ -140,6 +145,12 @@ sub lfm_user_get_info {
 	my $user = shift;
 	my $apires = lfmjson("user.getInfo", {user => $user});
 	return $apires->{user};
+}
+
+sub lfm_artistget_info {
+	my $artist = shift;
+	my $apires = lfmjson("artist.getInfo", {artist => $artist});
+	return $apires->{artist};
 }
 
 sub array_take {
@@ -211,6 +222,17 @@ sub uc_user {
 	return $userinfo;
 }
 
+sub uc_artist {
+	my $options = shift;
+	my $artist;
+	if ($options->{name} eq "-") {
+		$artist = shift
+	} else { $artist = $options->{name}; }
+
+	my $artistinfo = lfm_artistget_info($artist);
+	return $artistinfo;
+}
+
 sub uc_take {
 	my $options = shift;
 	my $array = shift;
@@ -262,6 +284,7 @@ sub process_command {
 		"np" => \&uc_np,
 		"recent_tracks" => \&uc_recent_tracks,
 		"user" => \&uc_user,
+		"artist" => \&uc_artist,
 		"take" => \&uc_take,
 		"extract" => \&uc_extract,
 		"format" => \&uc_format,
