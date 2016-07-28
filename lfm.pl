@@ -346,9 +346,11 @@ sub process_command {
 
 sub process_input {
 	my $input = shift;
+	my $dump = shift;
 
 	if ($input =~ $lfmparser) {
 		my $lfm = $/{lfm};
+		return $lfm if $dump;
 
 		if (my $cmdchain = $lfm->{cmdchain} ) {
 			# Command Chain
@@ -372,6 +374,14 @@ sub lfm {
 	weechat::command($buffer, process_input($args));
 }
 
+sub dumpast {
+	my $data = shift;
+	my $buffer = shift;
+	my $args = shift;
+	my $dump = process_input($args, 1);
+	weechat::print("", Dumper($dump));
+}
+
 if ($ARGV[0] && $ARGV[0] =~ /cli/i) {
 	print process_input($ARGV[1]);
 } else {
@@ -381,5 +391,10 @@ if ($ARGV[0] && $ARGV[0] =~ /cli/i) {
 		"",
 		"",
 		"lfm", "");
+	weechat::hook_command("dumpast", "dumps lastfm shit",
+		"dumpast",
+		"",
+		"",
+		"dumpast", "");
 }
 
