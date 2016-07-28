@@ -49,6 +49,7 @@ my $lfmparser = qr{
 		| <artist>
 		| <take>
 		| <extract>
+		| <filter>
 		| <format>
 		| <dump>
 		| <tell>
@@ -82,6 +83,13 @@ my $lfmparser = qr{
 		extract track
 		| extract user
 
+	#### Filter ####
+	<rule: filter>
+		filter (<[filter_pattern]>+ % ,)
+
+	<rule: filter_pattern>
+		<from=name> -\> <to=name>
+
 	#### Format command ####
 	<rule: format>
 		format "<fpattern>"
@@ -98,7 +106,7 @@ my $lfmparser = qr{
 
 	#### Names ####
 	<rule: highlight> @<name> (?{ $MATCH=$MATCH{name}; })
-	<rule: name> [a-zA-Z0-9_`\[\]-]+
+	<rule: name> [.:\#a-zA-Z0-9_`\[\]-]+
 
 	#### Numbers ####
 	<rule: number> [0-9]+
@@ -157,6 +165,26 @@ sub array_take {
 	my $array = shift;
 	my $which = shift;
 	return @{$array}[$which];
+}
+
+sub filter {
+	my $data = shift;
+	my $patterns = shift;
+	my $result = {};
+
+	foreach my $pattern (@{$patterns}) {
+		my @steps = split(/\./, $pattern->{from});
+		my $current = $data;
+		foreach my $step (@steps) {
+			if ($step =~ /\d+/) {
+				$current = $current->[$step];
+			} else {
+				$current = $current->{$step};
+			}
+		}
+		$result->{$pattern->{to}} = $current;
+	}
+	return $result;
 }
 
 sub extract_track_info {
@@ -250,6 +278,14 @@ sub uc_extract {
 	}
 }
 
+sub uc_filter {
+	my $options = shift;
+	my $data = shift;
+
+	my $pattern = $options->{filter_pattern};
+	return filter($data, $pattern);
+}
+
 sub uc_format {
 	my $options = shift;
 	my $data = shift;
@@ -287,6 +323,7 @@ sub process_command {
 		"artist" => \&uc_artist,
 		"take" => \&uc_take,
 		"extract" => \&uc_extract,
+		"filter" => \&uc_filter,
 		"format" => \&uc_format,
 		"dump" => \&uc_dump,
 		"tell" => \&uc_tell,
@@ -305,7 +342,6 @@ sub process_input {
 
 	if ($input =~ $lfmparser) {
 		my $lfm = $/{lfm};
-		#print Dumper($lfm);
 
 		if (my $cmdchain = $lfm->{cmdchain} ) {
 			# Command Chain
