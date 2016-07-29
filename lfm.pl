@@ -259,10 +259,11 @@ sub uc_user {
 
 sub uc_artist {
 	my $options = shift;
+	my $previous = shift;
+
 	my $artist;
-	if ($options->{name} eq "-") {
-		$artist = shift
-	} else { $artist = $options->{name}; }
+	if ($options->{name} eq "-") { $artist = $previous; }
+	else { $artist = $options->{name}; }
 
 	my $artistinfo = lfm_artistget_info($artist);
 	return $artistinfo;
