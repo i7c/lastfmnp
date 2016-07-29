@@ -125,14 +125,14 @@ my $lfmparser = qr{
 		(
 			((-u|--user) <user=name>)
 			| ((-n|--number) <number>)
-		)*
+		)* <ws>
 
 	<rule: uatracks>
 		uatracks
 		(
 			((-u|--user) <user=name>)
 			| ((-a|--artist) <artist=name>)
-		)*
+		)* <ws>
 
 	#### User ####
 	<rule: user>
