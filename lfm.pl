@@ -44,7 +44,8 @@ my $lfmparser = qr{
 
 	<rule: command>
 		<np>
-		| <user_recent_tracks>
+		| <utracks>
+		| <uatracks>
 		| <user>
 		| <artist>
 		| <take>
@@ -66,8 +67,11 @@ my $lfmparser = qr{
 		| (-n|--np-only)(?{$MATCH="PLAYING";})
 
 	#### Retrieve recent tracks ####
-	<rule: user_recent_tracks>
-		utracks <user=name> <amount=number>
+	<rule: utracks>
+		utracks ((-u|--user) <user=name>)? ((-n|--number) <number>)?
+
+	<rule: uatracks>
+		uatracks ((-u|--user) <user=name>)? ((-a|--artist) <artist=name>)?
 
 	#### User ####
 	<rule: user>
@@ -150,6 +154,14 @@ sub lfm_user_get_recent_tracks {
 	my $apires = lfmjson("user.getRecentTracks",
 		{user => $user, limit => $limit });
 	return $apires->{recenttracks}->{track};
+}
+
+sub lfm_user_get_artist_tracks {
+	my $user = shift;
+	my $artist = shift;
+
+	my $apires = lfmjson("user.getArtistTracks", {user => $user, artist => $artist});
+	return $apires;
 }
 
 sub lfm_user_get_info {
@@ -246,7 +258,18 @@ sub uc_np {
 
 sub uc_user_recent_tracks {
 	my $options = shift;
-	return lfm_user_get_recent_tracks($options->{user}, $options->{amount});
+	my $user = $options->{user} // weechat::config_string(cnf("user"));
+	my $number = $options->{number} // 10;
+	return lfm_user_get_recent_tracks($user, $number);
+}
+
+sub uc_user_artist_tracks {
+	my $options = shift;
+	my $previous = shift;
+
+	my $user = $options->{user} // weechat::config_string(cnf("user"));
+	my $artist = $options->{artist} // $previous;
+	return lfm_user_get_artist_tracks($user, $artist);
 }
 
 sub uc_user {
@@ -326,7 +349,8 @@ sub process_command {
 
 	my %callmap = (
 		"np" => \&uc_np,
-		"user_recent_tracks" => \&uc_user_recent_tracks,
+		"utracks" => \&uc_user_recent_tracks,
+		"uatracks" => \&uc_user_artist_tracks,
 		"user" => \&uc_user,
 		"artist" => \&uc_artist,
 		"take" => \&uc_take,
