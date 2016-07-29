@@ -169,10 +169,9 @@ my $lfmparser = qr{
 		dump
 
 	#### Tell Command ####
-	<rule: tell> <[highlight]>+
+	<rule: tell> @<[name]>+
 
 	#### Names ####
-	<rule: highlight> @<name> (?{ $MATCH=$MATCH{name}; })
 	<rule: name> [.:\#a-zA-Z0-9_`\[\]-]+
 
 	#### Numbers ####
