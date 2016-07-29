@@ -106,6 +106,7 @@ my $lfmparser = qr{
 		| <format>
 		| <dump>
 		| <tell>
+		| <alias>
 
 
 	#### NP Command ####
@@ -159,10 +160,10 @@ my $lfmparser = qr{
 
 	#### Format command ####
 	<rule: format>
-		format "<fpattern>"
+		format '<fpattern>'
 
 	<rule: fpattern>
-		[^"]+
+		[^']+
 
 	#### Dump ####
 	<rule: dump>
@@ -176,6 +177,10 @@ my $lfmparser = qr{
 
 	#### Numbers ####
 	<rule: number> [0-9]+
+
+	#### Aliases ####
+	<rule: alias>
+		!? <name>
 
 };
 
@@ -400,11 +405,25 @@ sub uc_tell {
 			text => $text});
 }
 
+sub uc_alias {
+	my $options = shift;
+	my $previous = shift;
+	my $dump = shift;
+
+	my $input = weechat::config_string(cnf("alias." . $options->{name}));
+	if (! $input) {
+		weechat::print("", "No such alias: " . $options->{name});
+		return "";
+	}
+	return process_input($input, $dump, $previous);
+}
+
 
 #### Command Processing Machinery ####
 sub process_command {
 	my $cmd = shift;
 	my $prev = shift;
+	my $dump = shift;
 
 	my %callmap = (
 		"np" => \&uc_np,
@@ -418,6 +437,7 @@ sub process_command {
 		"format" => \&uc_format,
 		"dump" => \&uc_dump,
 		"tell" => \&uc_tell,
+		"alias" => \&uc_alias,
 	);
 
 	for my $key (keys %{ $cmd } ) {
@@ -431,6 +451,7 @@ sub process_command {
 sub process_input {
 	my $input = shift;
 	my $dump = shift;
+	my $previous = shift;
 
 	if ($input =~ $lfmparser) {
 		my $lfm = $/{lfm};
@@ -438,9 +459,8 @@ sub process_input {
 
 		if (my $cmdchain = $lfm->{cmdchain} ) {
 			# Command Chain
-			my $previous;
 			foreach my $cmd (@{$cmdchain}) {
-				$previous = process_command($cmd, $previous);
+				$previous = process_command($cmd, $previous, $dump);
 			}
 			return $previous;
 		} else {
