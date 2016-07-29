@@ -9,6 +9,58 @@ use constant BASE_URL => 'https://ws.audioscrobbler.com/2.0/?';
 my $prgname = "lfm";
 my $confprefix = "plugins.var.perl.$prgname";
 
+my $LFMHELP =
+
+"lfm.pl is a weechat plugin that allows to query the last.fm-API in
+several ways and 'say' the results to current buffers.
+
+lfm.pl adds one command to weechat called /$prgname. /$prgname itself
+accepts a 'command chain' (which can has the length of one, i.e. a
+single command, of course). In a chain the commands are separated either
+by a pipe (|) or by three dots (...). The commands are executed from
+left to right and the result of any command is passed to the next
+command. The result of the last command is posted to the chat.
+
+While previous versions of this script only provided access to
+high-level commands, this version exposes all the internal commands to
+the user as well and allows to define own commands. Usually, the user
+has all means to 'rewrite' the high-level commands and of course create
+new useful high-level commands with these means. In the following we
+describe all available commands.
+
+
+np [<flags>] [<user>] [<format pattern>]
+****************************************
+
+	Prints the currently played or (if not available) the most
+	recently played song.
+
+	You can specify a last.fm user. If you don’t the user set in
+	$confprefix.user will be queried.
+
+	You can specify a format pattern. If you don’t the pattern set
+	in $confprefix.np_fpattern will be used.
+
+	Flags:
+	-n:\t\tOnly return result if song is currently playing
+	-t:\t\tOnly return the title of the song (overrides format pattern)
+	-a:\t\tOnly return the artist of the song (overrides format pattern)
+	-A:\t\tOnly return the album of the song (overrides format pattern)
+
+	You can specify only one of -t -a or -A (or undefined shit happens).
+
+
+dump
+****
+
+	Takes anything as input and dumps it to the weechat buffer. This is very
+	useful to debug own commands (or chains) and see their result. dump
+	provides no output.
+
+	Example:
+	/$prgname user | dump
+";
+
 binmode(STDOUT, ":utf8");
 
 sub cnf {
@@ -411,7 +463,7 @@ if ($ARGV[0] && $ARGV[0] =~ /cli/i) {
 	print process_input($ARGV[1]);
 } else {
 	weechat::register("lfm", "i7c", "0.3", "GPL3", "Prints last.fm shit", "", "");
-	weechat::hook_command("lfm", "performs lastfm shit",
+	weechat::hook_command("lfm", $LFMHELP,
 		"lfm",
 		"",
 		"",
