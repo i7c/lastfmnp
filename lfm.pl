@@ -44,7 +44,7 @@ my $lfmparser = qr{
 
 	<rule: command>
 		<np>
-		| <recent_tracks>
+		| <user_recent_tracks>
 		| <user>
 		| <artist>
 		| <take>
@@ -66,8 +66,8 @@ my $lfmparser = qr{
 		| (-n|--np-only)(?{$MATCH="PLAYING";})
 
 	#### Retrieve recent tracks ####
-	<rule: recent_tracks>
-		tracks <user=name> <amount=number>
+	<rule: user_recent_tracks>
+		utracks <user=name> <amount=number>
 
 	#### User ####
 	<rule: user>
@@ -244,7 +244,7 @@ sub uc_np {
 	return format_output($fpattern, $result);
 }
 
-sub uc_recent_tracks {
+sub uc_user_recent_tracks {
 	my $options = shift;
 	return lfm_user_get_recent_tracks($options->{user}, $options->{amount});
 }
@@ -325,7 +325,7 @@ sub process_command {
 
 	my %callmap = (
 		"np" => \&uc_np,
-		"recent_tracks" => \&uc_recent_tracks,
+		"user_recent_tracks" => \&uc_user_recent_tracks,
 		"user" => \&uc_user,
 		"artist" => \&uc_artist,
 		"take" => \&uc_take,
