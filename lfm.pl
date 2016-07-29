@@ -120,10 +120,18 @@ my $lfmparser = qr{
 
 	#### Retrieve recent tracks ####
 	<rule: utracks>
-		utracks ((-u|--user) <user=name>)? ((-n|--number) <number>)?
+		utracks
+		(
+			((-u|--user) <user=name>)
+			| ((-n|--number) <number>)
+		)*
 
 	<rule: uatracks>
-		uatracks ((-u|--user) <user=name>)? ((-a|--artist) <artist=name>)?
+		uatracks
+		(
+			((-u|--user) <user=name>)
+			| ((-a|--artist) <artist=name>)
+		)*
 
 	#### User ####
 	<rule: user>
