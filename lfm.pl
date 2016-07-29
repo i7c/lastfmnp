@@ -408,14 +408,13 @@ sub uc_tell {
 sub uc_alias {
 	my $options = shift;
 	my $previous = shift;
-	my $dump = shift;
 
 	my $input = weechat::config_string(cnf("alias." . $options->{name}));
 	if (! $input) {
-		weechat::print("", "No such alias: " . $options->{name});
+		weechat::print("", "ERROR: No such alias: " . $options->{name});
 		return "";
 	}
-	return process_input($input, $dump, $previous);
+	return process_input($input, $previous);
 }
 
 
@@ -423,7 +422,6 @@ sub uc_alias {
 sub process_command {
 	my $cmd = shift;
 	my $prev = shift;
-	my $dump = shift;
 
 	my %callmap = (
 		"np" => \&uc_np,
@@ -450,17 +448,15 @@ sub process_command {
 
 sub process_input {
 	my $input = shift;
-	my $dump = shift;
 	my $previous = shift;
 
 	if ($input =~ $lfmparser) {
 		my $lfm = $/{lfm};
-		return $lfm if $dump;
 
 		if (my $cmdchain = $lfm->{cmdchain} ) {
 			# Command Chain
 			foreach my $cmd (@{$cmdchain}) {
-				$previous = process_command($cmd, $previous, $dump);
+				$previous = process_command($cmd, $previous);
 			}
 			return $previous;
 		} else {
@@ -482,8 +478,23 @@ sub dumpast {
 	my $data = shift;
 	my $buffer = shift;
 	my $args = shift;
-	my $dump = process_input($args, 1);
-	weechat::print("", Dumper($dump));
+
+	if ($args =~ $lfmparser) {
+		my $lfm = $/{lfm};
+		weechat::print("", Dumper($lfm));
+		if (my $cmdchain = $lfm->{cmdchain} ) {
+			# Command Chain
+			foreach my $cmd (@{$cmdchain}) {
+				if ($cmd->{"alias"}) {
+					weechat::print("", "Dumping AST for alias " . $cmd->{alias}->{name});
+					my $input = weechat::config_string(cnf("alias." . $cmd->{alias}->{name}));
+					dumpast($data, $buffer, $input);
+				}
+			}
+		}
+	} else {
+		weechat::print("", "ERROR: No valid input. No AST available.");
+	}
 }
 
 if ($ARGV[0] && $ARGV[0] =~ /cli/i) {
