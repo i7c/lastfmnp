@@ -170,7 +170,7 @@ my $lfmparser = qr{
 		dump
 
 	#### Tell Command ####
-	<rule: tell> @<[name]>+
+	<rule: tell> @ (<.ws><[name]>)+
 
 	#### Names ####
 	<rule: name> [.:\#a-zA-Z0-9_`\[\]-]+
@@ -399,7 +399,7 @@ sub uc_tell {
 	my $options = shift;
 	my $text = shift;
 
-	my @nicks = @{ $options->{highlight} };
+	my @nicks = @{ $options->{name} };
 	my $nickstring = join(", ", @nicks);
 	return format_output("{nicks text:%nicks: %text}", { nicks => $nickstring,
 			text => $text});
