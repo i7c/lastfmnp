@@ -79,7 +79,9 @@ sub lfmjson {
 	my $rq = HTTP::Request->new(GET => 'https://ws.audioscrobbler.com/2.0/');
 	my $content = "format=json&api_key=$apikey&method=$method";
 	foreach my $key (keys %$params) {
-		$content = $content . "&$key=" . $params->{$key};
+		if ($params->{$key}) {
+			$content = $content . "&$key=" . $params->{$key};
+		}
 	}
 	$rq->content($content);
 	my $res = $ua->request($rq);
