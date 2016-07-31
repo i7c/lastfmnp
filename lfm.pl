@@ -108,6 +108,7 @@ my $lfmparser = qr{
 		| <format>
 		| <dump>
 		| <tell>
+		| <track>
 		| <alias>
 
 
@@ -175,15 +176,25 @@ my $lfmparser = qr{
 	<rule: tell> @ (<.ws><[name]>)+
 
 	#### Names ####
-	<rule: name> [.:\#a-zA-Z0-9_`\[\]-]+
+	<rule: name> [.:\#?a-zA-Z0-9_`\[\]-]+
+
+	<rule: str> [^']+
 
 	#### Numbers ####
 	<rule: number> [0-9]+
 
+	#### Track Info ####
+	<rule: track>
+		track
+		(
+			(-u|--user) <user=name>
+			| (-a|--artist) (<artist=name> | '<artist=str>')
+			| (-t|--track) (<track=name> | '<track=str>')
+		)* <ws>
+
 	#### Aliases ####
 	<rule: alias>
 		!? <name>
-
 };
 
 sub format_output {
@@ -240,6 +251,12 @@ sub lfm_artistget_info {
 	my $artist = shift;
 	my $apires = lfmjson("artist.getInfo", {artist => $artist});
 	return $apires->{artist};
+}
+
+sub lfm_track_get_info {
+	my $params = shift;
+	my $apires = lfmjson("track.getInfo", $params);
+	return $apires;
 }
 
 sub array_take {
@@ -407,6 +424,18 @@ sub uc_tell {
 			text => $text});
 }
 
+sub uc_track {
+	my $options = shift;
+	my $previous = shift;
+
+	my $params = {};
+	$params->{artist} = $options->{artist} // $previous->{artist};
+	$params->{track} = $options->{track} // $previous->{track};
+	$params->{username} = $options->{user} // $previous->{user} // weechat::config_string(cnf("user"));
+	$params->{mbid} = $options->{id};
+	return lfm_track_get_info($params);
+}
+
 sub uc_alias {
 	my $options = shift;
 	my $previous = shift;
@@ -437,6 +466,7 @@ sub process_command {
 		"format" => \&uc_format,
 		"dump" => \&uc_dump,
 		"tell" => \&uc_tell,
+		"track" => \&uc_track,
 		"alias" => \&uc_alias,
 	);
 
