@@ -143,7 +143,13 @@ my $lfmparser = qr{
 
 	#### Artist ####
 	<rule: artist>
-		artist <name>
+		artist
+		(
+			(-a|--artist) (<artist=name> | '<artist=str>')
+			| (-u|--user) <user=name>
+			| (-l|--lang) <lang=name>
+			| (-i|--id) <id=name>
+		)* <ws>
 
 	#### Take Array element ####
 	<rule: take>
@@ -248,8 +254,8 @@ sub lfm_user_get_info {
 }
 
 sub lfm_artistget_info {
-	my $artist = shift;
-	my $apires = lfmjson("artist.getInfo", {artist => $artist});
+	my $params = shift;
+	my $apires = lfmjson("artist.getInfo", $params);
 	return $apires->{artist};
 }
 
@@ -367,11 +373,13 @@ sub uc_artist {
 	my $options = shift;
 	my $previous = shift;
 
-	my $artist;
-	if ($options->{name} eq "-") { $artist = $previous; }
-	else { $artist = $options->{name}; }
+	my $params = {};
+	$params->{artist} = $options->{artist} // $previous;
+	$params->{user} = $options->{user} // weechat::config_string(cnf("user"));
+	$params->{lang} = $options->{lang};
+	$params->{id} = $options->{id};
 
-	my $artistinfo = lfm_artistget_info($artist);
+	my $artistinfo = lfm_artistget_info($params);
 	return $artistinfo;
 }
 
