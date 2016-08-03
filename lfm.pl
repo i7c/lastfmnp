@@ -29,7 +29,7 @@ new useful high-level commands with these means. In the following we
 describe all available commands.
 
 
-np [<flags>] [<user>] [<format pattern>]
+np [-u|--user <user>] [-p|--pattern <format pattern>] [<flags>]
 ****************************************
 
 	Prints the currently played or (if not available) the most
@@ -114,7 +114,12 @@ my $lfmparser = qr{
 
 	#### NP Command ####
 	<rule: np>
-		np <[np_flags]>* <np_user=(\w+)>? ("<np_fpattern=fpattern>")? <ws>
+		np
+		(
+			(-u|--user) <np_user=(\w+)>
+			| (-p|--pattern) '<np_fpattern=fpattern>'
+		)*
+		<[np_flags]>* <ws>
 
 	<rule: np_flags>
 		(-a|--artist)(?{$MATCH="ARTIST";})
