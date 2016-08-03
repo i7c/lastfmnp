@@ -335,7 +335,7 @@ sub uc_np {
 	my $options = shift;
 	my %flags = map { $_ => 1 }  @{ $options->{np_flags} };
 	my $user = $options->{np_user} // weechat::config_string(cnf("user"));
-	my $fpattern = $options->{np_fpattern} // weechat::config_string(cnf("np_fpattern"));
+	my $fpattern = $options->{np_fpattern} // weechat::config_string(cnf("pattern.np"));
 
 	my $result =
 		extract_track_info(array_take(
