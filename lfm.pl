@@ -68,6 +68,8 @@ dump
 
 binmode(STDOUT, ":utf8");
 
+my %env = ();
+
 sub cnf {
 	my $option = shift;
 	return weechat::config_get("$confprefix.$option");
@@ -114,6 +116,7 @@ my $lfmparser = qr{
 		| <dump>
 		| <tell>
 		| <track>
+		| <subshell>
 		| <alias>) <tonowhere=(\^)>?
 
 
@@ -207,6 +210,9 @@ my $lfmparser = qr{
 			| (-a|--artist) (<artist=name> | '<artist=str>')
 			| (-t|--track) (<track=name> | '<track=str>')
 		)* <ws>
+
+	<rule: subshell>
+		\$ <in=name>? { <sublfm=lfm> } <out=name>?
 
 	#### Aliases ####
 	<rule: alias>
@@ -454,6 +460,22 @@ sub uc_track {
 	return lfm_track_get_info($params);
 }
 
+sub uc_subshell {
+	my $options = shift;
+	my $previous = shift;
+
+	# explicit input overrides
+	if ($options->{in}) {
+		$previous = $env{$options->{in}};
+	}
+	my $out = process_cmdchain($options->{sublfm}->{cmdchain}, $previous);
+
+	if ($options->{out}) {
+		$env{$options->{out}} = $out;
+	}
+	return $out;
+}
+
 sub uc_alias {
 	my $options = shift;
 	my $previous = shift;
@@ -485,6 +507,7 @@ sub process_command {
 		"dump" => \&uc_dump,
 		"tell" => \&uc_tell,
 		"track" => \&uc_track,
+		"subshell" => \&uc_subshell,
 		"alias" => \&uc_alias,
 	);
 
@@ -529,6 +552,9 @@ sub lfm {
 	my $data = shift;
 	my $buffer = shift;
 	my $args = shift;
+
+	%env = ();
+	$env{env} = \%env;
 	weechat::command($buffer, process_input($args));
 }
 
