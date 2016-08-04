@@ -19,7 +19,12 @@ accepts a 'command chain' (which can has the length of one, i.e. a
 single command, of course). In a chain the commands are separated either
 by a pipe (|) or by three dots (...). The commands are executed from
 left to right and the result of any command is passed to the next
-command. The result of the last command is posted to the chat.
+command. The result of the last command is posted to the chat. Sometimes
+it might be desirable to prevent a command from passing its result to
+the next command in the command chain. In that case you can use a ^ at
+the end of the command to redirect the output to nowhere. I suggest to
+use the ... command separator after a ^ redirect, although the pipe |
+works all the same.
 
 While previous versions of this script only provided access to
 high-level commands, this version exposes all the internal commands to
@@ -30,7 +35,7 @@ describe all available commands.
 
 
 np [-u|--user <user>] [-p|--pattern <format pattern>] [<flags>]
-****************************************
+***************************************************************
 
 	Prints the currently played or (if not available) the most
 	recently played song.
@@ -97,7 +102,7 @@ my $lfmparser = qr{
 	<token: chainsep> \.\.\. | ~ | \|
 
 	<rule: command>
-		<np>
+		(<np>
 		| <utracks>
 		| <uatracks>
 		| <user>
@@ -109,7 +114,7 @@ my $lfmparser = qr{
 		| <dump>
 		| <tell>
 		| <track>
-		| <alias>
+		| <alias>) <tonowhere=(\^)>?
 
 
 	#### NP Command ####
@@ -502,6 +507,7 @@ sub process_input {
 			# Command Chain
 			foreach my $cmd (@{$cmdchain}) {
 				$previous = process_command($cmd, $previous);
+				if ($cmd->{tonowhere}) { undef $previous; }
 			}
 			return $previous;
 		} else {
