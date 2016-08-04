@@ -139,6 +139,26 @@ can be used in command chains just like normal commands:
 
 /lfm !comp_artist | dump
 
+Aliases can take positional arguments. Say you create the following alias
+
+/set plugins.var.perl.lfm.alias.xtracks \"utracks -u \$1 -n \$2\"
+
+you can use the alias with arguments: /lfm !xtracks iSevenC 3
+
+Arguments can be single words (or numbers for that matter) or
+single-quoted strings. Please note that alias arguments are simple
+string replacements that happen *before* the alias is executed. Alias
+arguments can only be literal and not the evaluation of some complex
+term. If you pass a single word the respective \$x will be replaced by
+that word. If you pass 'a single quoted string' the \$x will be replaced
+by that string *including* the ''. In most cases this is what you want.
+Because aliases work with simple string-based expansion, you can even
+do things like
+
+/set plugins.var.perl.lfm.alias.test \"utracks | \$1\"
+
+/lfm !test dump
+
 
 COMMANDS
 ********
