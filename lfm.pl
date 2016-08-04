@@ -11,11 +11,11 @@ my $confprefix = "plugins.var.perl.$prgname";
 
 my $LFMHELP =
 
-"lfm.pl is a weechat plugin that allows to query the last.fm-API in
+"$prgname.pl is a weechat plugin that allows to query the last.fm-API in
 several ways and 'say' the results to current buffers.
 
 lfm.pl adds one command to weechat called /$prgname. /$prgname itself
-accepts a 'command chain' (which can has the length of one, i.e. a
+accepts a 'command chain' (which can have the length of one, i.e. a
 single command, of course). In a chain the commands are separated either
 by a pipe (|) or by a semicolon (;). The commands are executed from left
 to right and the result of any command is passed to the next command.
@@ -24,18 +24,126 @@ be desirable to prevent a command from passing its result to the next
 command in the command chain. In that case you can use a ^ at the end of
 the command to redirect the output to nowhere. I suggest to use the ;
 command separator after a ^ redirect, although the pipe | works all the
-same.
+same. Results are also passed to the following command if you use just a
+;. So the separators | and ; are entirely equivalent.
 
 While previous versions of this script only provided access to
 high-level commands, this version exposes all the internal commands to
 the user as well and allows to define own commands. Usually, the user
 has all means to 'rewrite' the high-level commands and of course create
 new useful high-level commands with these means. In the following we
-describe all available commands.
+describe all available commands and language features.
 
+There are some essential configuration options which the user must set.
+
+/set plugins.var.perl.$prgname.apikey
+
+must be set to a valid last.fm API-key. You can get one on
+http://www.last.fm/api
+
+/set plugins.var.perl.$prgname.user
+
+should be set to *your* last.fm username. Many commands have a --user
+flag which - if omitted -  will use this username as default value.
+
+/set plugins.var.perl.$prgname.pattern.np \"{artist title:I'm playing %artist - %title}{album: (%album)}\"
+
+This pattern is essential as it is used by the /$prgname np command.
+
+With these three settings, /$prgname np should already work.
+
+
+SUBSHELLS AND VARIABLES
+***********************
+
+$prgname knows 'subshells'. A subshell is just another valid command in
+a command chain. It looks like this:
+
+\$ [invar] { <cmdchain> } [outvar]
+
+The cmdchain is any non-empty command chain (which could contain
+subshells again). The invar and outvar parts are optional. They are a
+primivitve but effective implementation of variables. The content of
+invar is passed to the first command in the command chain as input. The
+outvar stores the result of the last command in the command chain. Note that
+the output is still passed to a subsequent command, even if you store it.
+
+Examples:
+
+\${np -a} art
+
+This stores the most recently played artist in a variable called art.
+
+
+\${np -a} art | \${artist} artjson
+
+This first stores the most recently played artist in the variable art,
+then looks up this artist (the first subshell still passes the result to
+the next command) and the returning json is stored in a variable called
+artjson.
+
+There is one *special* variable called env which represents the whole
+environemnt, i.e. all variables. It can be used both as invar and outvar
+with slightly different meaning. Note that env is just another HASH and
+any command that can take a HASH as input can take env as input. So you
+may do something like:
+
+\$ env { format '{art:Artist: %art.}' }
+
+Here format takes the environment as input and you can read any
+variables from it, in that case the previously set art variable. env can
+also be used as outvar, but *only* if the result of the last command is
+a HASH. In this case all the keys in this hash are used as new variables
+in the environment and set to the respective values. Example:
+
+Say, command C returns a hash {x => 1, y => 42}. If you run
+
+\$ { C } env
+
+the variable x will be 1 and y will be 42 afterwards.
+
+Hint: a very useful way to show the entire environment is to pass it to
+dump which will print it on buffer 1. Just do
+
+\$ env { dump }
+
+There is only one environment which is shared among all subshells and the
+top-level shell! If you nest subshells and set variables they will still
+appear (and potentially overwrite) any variable with the same name. E.g.:
+
+\${ \${np -a} artist^; np -t} title^; \$ env {dump}
+
+will show you two variables artist and title and thus this command is
+equivalent to
+
+\${np -a} artist^; \${np -t} title^; \$ env {dump}
+
+The environment is reset to an empty environment whenever you run
+/$prgname. Effectively that means that the variables live for one
+execution of /$prgname.
+
+ALIASES
+*******
+
+You can create aliases by setting configuration variables. For example,
+if you set /set plugins.var.perl.lfm.alias.comp_artist to a valid
+command chain as value, you effectifely created the alias comp_artist.
+
+You can execute the alias exactly as any other command by running:
+
+/lfm !comp_artist
+
+The ! *may* be ommitted if it is still unambigious that you are
+referring to an alias. If in doubt, just add the ! in front. Aliases
+can be used in command chains just like normal commands:
+
+/lfm !comp_artist | dump
+
+
+COMMANDS
+********
 
 np [-u|--user <user>] [-p|--pattern <format pattern>] [<flags>]
-***************************************************************
 
 	Prints the currently played or (if not available) the most
 	recently played song.
@@ -56,7 +164,6 @@ np [-u|--user <user>] [-p|--pattern <format pattern>] [<flags>]
 
 
 dump
-****
 
 	Takes anything as input and dumps it to the weechat buffer. This is very
 	useful to debug own commands (or chains) and see their result. dump
