@@ -496,6 +496,17 @@ sub process_command {
 	}
 }
 
+sub process_cmdchain {
+	my $cmdchain = shift;
+	my $previous = shift;
+
+	foreach my $cmd (@{$cmdchain}) {
+		$previous = process_command($cmd, $previous);
+		if ($cmd->{tonowhere}) { undef $previous; }
+	}
+	return $previous;
+}
+
 sub process_input {
 	my $input = shift;
 	my $previous = shift;
@@ -504,11 +515,7 @@ sub process_input {
 		my $lfm = $/{lfm};
 
 		if (my $cmdchain = $lfm->{cmdchain} ) {
-			# Command Chain
-			foreach my $cmd (@{$cmdchain}) {
-				$previous = process_command($cmd, $previous);
-				if ($cmd->{tonowhere}) { undef $previous; }
-			}
+			$previous = process_cmdchain($lfm->{cmdchain}, $previous);
 			return $previous;
 		} else {
 			#TODO: error case
