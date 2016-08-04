@@ -52,6 +52,10 @@ This pattern is essential as it is used by the /$prgname np command.
 
 With these three settings, /$prgname np should already work.
 
+To use the tell function you have to set this pattern:
+
+/set plugins.var.perl.$prgname.pattern.tell \"{nicks text:%text ← %nicks}\"
+
 
 SUBSHELLS AND VARIABLES
 ***********************
@@ -368,13 +372,17 @@ sub format_output {
 	my $rest;
 	my $result;
 
+	if ($env{_fpattern}) { $pattern = $env{_fpattern}; }
 	while ($pattern) {
 		# get next { } group
-		($varlist, $scheme, $rest) = $pattern =~ m/\{([\w\s]+):([^\{\}]*)\}(.*)/g;
+		($varlist, $scheme, $rest) = $pattern =~ m/\{([\w\s]*):([^\{\}]*)\}(.*)/g;
 		$pattern = $rest;
 
-		if ($varlist && $scheme) {
-			my @vars = split(/\s+/, $varlist);
+		if ($scheme) {
+			my @vars = ();
+			if ($varlist) {
+				@vars = split(/\s+/, $varlist);
+			}
 			my $valid = 1;
 			foreach my $x (@vars) {
 				if ($params->{$x}) {
@@ -591,8 +599,8 @@ sub uc_tell {
 
 	my @nicks = @{ $options->{name} };
 	my $nickstring = join(", ", @nicks);
-	return format_output("{nicks text:%nicks: %text}", { nicks => $nickstring,
-			text => $text});
+	my $fpattern = $env{_tellpattern} // weechat::config_string(cnf("pattern.tell"));
+	return format_output($fpattern, { nicks => $nickstring, text => $text});
 }
 
 sub uc_track {
