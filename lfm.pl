@@ -17,14 +17,14 @@ several ways and 'say' the results to current buffers.
 lfm.pl adds one command to weechat called /$prgname. /$prgname itself
 accepts a 'command chain' (which can has the length of one, i.e. a
 single command, of course). In a chain the commands are separated either
-by a pipe (|) or by three dots (...). The commands are executed from
-left to right and the result of any command is passed to the next
-command. The result of the last command is posted to the chat. Sometimes
-it might be desirable to prevent a command from passing its result to
-the next command in the command chain. In that case you can use a ^ at
-the end of the command to redirect the output to nowhere. I suggest to
-use the ... command separator after a ^ redirect, although the pipe |
-works all the same.
+by a pipe (|) or by a semicolon (;). The commands are executed from left
+to right and the result of any command is passed to the next command.
+The result of the last command is posted to the chat. Sometimes it might
+be desirable to prevent a command from passing its result to the next
+command in the command chain. In that case you can use a ^ at the end of
+the command to redirect the output to nowhere. I suggest to use the ;
+command separator after a ^ redirect, although the pipe | works all the
+same.
 
 While previous versions of this script only provided access to
 high-level commands, this version exposes all the internal commands to
@@ -99,7 +99,7 @@ my $lfmparser = qr{
 	<rule: lfm>
 		<[cmdchain=command]>+ % <.chainsep>
 
-	<token: chainsep> \.\.\. | ~ | \|
+	<token: chainsep> ; | ~ | \|
 
 	<rule: command>
 		(<np>
