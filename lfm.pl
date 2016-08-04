@@ -606,9 +606,9 @@ sub uc_alias {
 		return "";
 	}
 	if ($options->{args}) {
-		for (my $i = scalar @{$options->{args}} - 1; $i >= 0; $i--) {
-			my $arg = $options->{args}->[$i]->{arg};
-			$input =~ s/\$1/$arg/g;
+		for (my $i = scalar @{$options->{args}}; $i > 0; $i--) {
+			my $arg = $options->{args}->[$i - 1]->{arg};
+			$input =~ s/\$$i/$arg/g;
 		}
 	}
 	return process_input($input, $previous);
