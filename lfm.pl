@@ -216,7 +216,10 @@ my $lfmparser = qr{
 
 	#### Aliases ####
 	<rule: alias>
-		!? <name>
+		!? <name> <[args=aliasarg]>*
+
+	<rule: aliasarg>
+		(<arg=(\w+)> | <arg=('[^']*')>)
 };
 
 sub format_output {
@@ -494,6 +497,12 @@ sub uc_alias {
 	if (! $input) {
 		weechat::print("", "ERROR: No such alias: " . $options->{name});
 		return "";
+	}
+	if ($options->{args}) {
+		for (my $i = scalar @{$options->{args}} - 1; $i >= 0; $i--) {
+			my $arg = $options->{args}->[$i]->{arg};
+			$input =~ s/\$1/$arg/g;
+		}
 	}
 	return process_input($input, $previous);
 }
