@@ -159,6 +159,13 @@ do things like
 
 /lfm !test dump
 
+If you want to replace \$x by a string (more than one word) but
+without any '' you can use [ ]. Examples:
+
+/set plugins.var.perl.lfm.alias.test \"utracks \$1\"
+
+/lfm !test [| dump]
+
 
 COMMANDS
 ********
@@ -346,7 +353,7 @@ my $lfmparser = qr{
 		!? <name> <[args=aliasarg]>*
 
 	<rule: aliasarg>
-		(<arg=(\w+)> | <arg=('[^']*')>)
+		(<arg=(\w+)> | <arg=('[^']*')> | \[<arg=([^\]]*)>\])
 };
 
 sub format_output {
