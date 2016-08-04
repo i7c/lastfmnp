@@ -471,7 +471,17 @@ sub uc_subshell {
 	my $out = process_cmdchain($options->{sublfm}->{cmdchain}, $previous);
 
 	if ($options->{out}) {
-		$env{$options->{out}} = $out;
+		if ($options->{out} eq "env") {
+			if (ref($out) eq "HASH") {
+				foreach my $k (keys %{$out}) {
+					$env{$k} = $out->{$k};
+				}
+			} else {
+				weechat::print("", "lfm: tried to embed something other than hash in environment");
+			}
+		} else {
+			$env{$options->{out}} = $out;
+		}
 	}
 	return $out;
 }
