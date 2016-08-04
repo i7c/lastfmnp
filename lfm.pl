@@ -486,7 +486,9 @@ sub extract_user_info {
 sub uc_np {
 	my $options = shift;
 	my %flags = map { $_ => 1 }  @{ $options->{np_flags} };
-	my $user = $options->{np_user} // weechat::config_string(cnf("user"));
+	my $user = $options->{np_user}
+		// $env{_user}
+		// weechat::config_string(cnf("user"));
 	my $fpattern = $options->{np_fpattern} // weechat::config_string(cnf("pattern.np"));
 
 	my $result =
@@ -504,8 +506,9 @@ sub uc_np {
 
 sub uc_user_recent_tracks {
 	my $options = shift;
-	my $user = $options->{user} // weechat::config_string(cnf("user"));
-	my $number = $options->{number} // 10;
+	my $user = $options->{user} // $env{_user}
+		// weechat::config_string(cnf("user"));
+	my $number = $options->{number} // $env{_num} // 10;
 	return lfm_user_get_recent_tracks($user, $number);
 }
 
@@ -513,15 +516,17 @@ sub uc_user_artist_tracks {
 	my $options = shift;
 	my $previous = shift;
 
-	my $user = $options->{user} // weechat::config_string(cnf("user"));
-	my $artist = $options->{artist} // $previous;
+	my $user = $options->{user} // $env{_user}
+		// weechat::config_string(cnf("user"));
+	my $artist = $options->{artist} // $previous // $env{_artist};
 	return lfm_user_get_artist_tracks($user, $artist);
 }
 
 sub uc_user {
 	my $options = shift;
 
-	my $user = $options->{name} // weechat::config_string(cnf("user"));
+	my $user = $options->{name} // $env{_user}
+		// weechat::config_string(cnf("user"));
 	my $userinfo = lfm_user_get_info($user);
 	return $userinfo;
 }
@@ -531,9 +536,10 @@ sub uc_artist {
 	my $previous = shift;
 
 	my $params = {};
-	$params->{artist} = $options->{artist} // $previous;
-	$params->{user} = $options->{user} // weechat::config_string(cnf("user"));
-	$params->{lang} = $options->{lang};
+	$params->{artist} = $options->{artist} // $previous // $env{_artist};
+	$params->{user} = $options->{user} // $env{_user}
+		// weechat::config_string(cnf("user"));
+	$params->{lang} = $options->{lang} // $env{_lang};
 	$params->{id} = $options->{id};
 
 	my $artistinfo = lfm_artistget_info($params);
@@ -594,10 +600,11 @@ sub uc_track {
 	my $previous = shift;
 
 	my $params = {};
-	$params->{artist} = $options->{artist} // $previous->{artist};
-	$params->{track} = $options->{track} // $previous->{track};
-	$params->{username} = $options->{user} // $previous->{user} // weechat::config_string(cnf("user"));
-	$params->{mbid} = $options->{id};
+	$params->{artist} = $options->{artist} // $previous->{artist} // $env{_artist};
+	$params->{track} = $options->{track} // $previous->{track} // $env{_track};
+	$params->{username} = $options->{user} // $previous->{user} // $env{_user}
+		// weechat::config_string(cnf("user"));
+	$params->{mbid} = $options->{id} // $previous->{id} // $env{_id};
 	return lfm_track_get_info($params);
 }
 
