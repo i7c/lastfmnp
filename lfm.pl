@@ -126,6 +126,32 @@ The environment is reset to an empty environment whenever you run
 /$prgname. Effectively that means that the variables live for one
 execution of /$prgname.
 
+
+ENVIRONMENT
+***********
+
+The section above describes how you can set variables and how they can
+be used to feed commands. The only way so far is to use the invar of a
+subshell which effectively changes what is passed as input to a command.
+There is another way how variables can change the behaviour of commands.
+If a command is 'environment-aware' it may read variables with
+particular names and use their value. This can lead to cases in which a
+command has several possible information sources available. In the
+extreme case, a command can have an explicit argument, a value passed
+via the input (from a previous command), an environment variable that is
+set and a configuration value which often acts as default. All commands
+need to define a precedence of these options and it *usually* is
+
+1. explicit parameter
+2. value via input from previous command
+3. environment variable
+4. configuration option
+
+There are exceptions, especially such where some of the possibilities
+are not available. Which env variables a command recognises is usually
+described in the help section of this command.
+
+
 ALIASES
 *******
 
