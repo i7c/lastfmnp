@@ -251,6 +251,7 @@ my $lfmparser = qr{
 		| <tell>
 		| <track>
 		| <subshell>
+		| <variable>
 		| <alias>) <tonowhere=(\^)>?
 
 
@@ -347,6 +348,9 @@ my $lfmparser = qr{
 
 	<rule: subshell>
 		\$ <in=name>? { <sublfm=lfm> } <out=name>?
+
+	<rule: variable>
+		\$ \( ('<value=str>' | <value=name>) \) <out=name>?
 
 	#### Aliases ####
 	<rule: alias>
@@ -623,6 +627,17 @@ sub uc_subshell {
 	return $out;
 }
 
+sub uc_variable {
+	my $options = shift;
+	my $previous = shift;
+
+	my $value = $options->{value};
+	if ($options->{out}) {
+		$env{$options->{out}} = $value;
+	}
+	return $value;
+}
+
 sub uc_alias {
 	my $options = shift;
 	my $previous = shift;
@@ -661,6 +676,7 @@ sub process_command {
 		"tell" => \&uc_tell,
 		"track" => \&uc_track,
 		"subshell" => \&uc_subshell,
+		"variable" => \&uc_variable,
 		"alias" => \&uc_alias,
 	);
 
