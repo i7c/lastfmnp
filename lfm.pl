@@ -412,12 +412,14 @@ sub format_output {
 			my $valid = 1;
 			foreach my $x (@vars) {
 				if ($params->{$x}) {
+					utf8::encode($params->{$x});
 					$scheme =~ s/%$x/$params->{$x}/g;
 				} else { $valid = 0; }
 			}
 			$result .= $scheme if $valid;
 		}
 	}
+	utf8::decode($result);
 	return $result;
 }
 
