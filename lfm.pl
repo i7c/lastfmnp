@@ -46,7 +46,7 @@ http://www.last.fm/api
 should be set to *your* last.fm username. Many commands have a --user
 flag which - if omitted -  will use this username as default value.
 
-/set plugins.var.perl.$prgname.pattern.np \"{artist title:I'm playing %artist - %title}{album: (%album)}\"
+/set plugins.var.perl.$prgname.pattern.np \"{artist title me:%me is playing %artist - %title}{artist title album: (%album)}\"
 
 This pattern is essential as it is used by the /$prgname np command.
 
@@ -202,32 +202,36 @@ COMMANDS
 
 np [-u|--user <user>] [-p|--pattern <format pattern>] [<flags>]
 
-	Prints the currently played or (if not available) the most
-	recently played song.
+    Prints the currently played or (if not available) the most
+    recently played song.
 
-	You can specify a last.fm user. If you don’t the user set in
-	$confprefix.user will be queried.
+    You may specify a user with -u. If no user is specified the
+    environment variable 'user' will be read. If it is not set either,
+    the value from the option $confprefix.user is used.
 
-	You can specify a format pattern. If you don’t the pattern set
-	in $confprefix.np_fpattern will be used.
+    You can specify a format pattern. If you don’t, the pattern set in
+    $confprefix.pattern.np will be used. np uses the format function to produce
+    the output. It automatically sets two format variables: %who and %me. If np
+    retrieved information for a different user (i.e. if -u or the variable were
+    set) then %who is set to this user, otherwise it is set to the value from
+    $confprefix.who. %me behaves similar, but it defaults to '/me'.
 
-	Flags:
-	-n:\t\tOnly return result if song is currently playing
-	-t:\t\tOnly return the title of the song (overrides format pattern)
-	-a:\t\tOnly return the artist of the song (overrides format pattern)
-	-A:\t\tOnly return the album of the song (overrides format pattern)
+    Flags:
+    -n:  Only return result if song is currently playing
+    -t:  Only return the title of the song (overrides format pattern)
+    -a:  Only return the artist of the song (overrides format pattern)
+    -A:  Only return the album of the song (overrides format pattern)
 
-	You can specify only one of -t -a or -A (or undefined shit happens).
-
+    You can specify only one of -t -a or -A (or undefined shit happens).
 
 dump
 
-	Takes anything as input and dumps it to the weechat buffer. This is very
-	useful to debug own commands (or chains) and see their result. dump
-	provides no output.
+    Takes anything as input and dumps it to the weechat buffer. This is very
+    useful to debug own commands (or chains) and see their result. dump
+    provides no output.
 
-	Example:
-	/$prgname user | dump
+    Example:
+    /$prgname user | dump
 ";
 
 binmode(STDOUT, ":utf8");
@@ -522,14 +526,16 @@ sub extract_user_info {
 sub uc_np {
 	my $options = shift;
 	my %flags = map { $_ => 1 }  @{ $options->{np_flags} };
-	my $user = $options->{np_user}
-		// $env{_user}
+	my $user = $options->{np_user} // $env{user}
 		// weechat::config_string(cnf("user"));
 	my $fpattern = $options->{np_fpattern} // weechat::config_string(cnf("pattern.np"));
 
 	my $result =
 		extract_track_info(array_take(
 				lfm_user_get_recent_tracks($user, 1), 0));
+	$result->{who} = $options->{np_user} // $env{user}
+		// weechat::config_string(cnf("who"));
+	$result->{me} = $options->{np_user} // $env{user} // "/me";
 
 	if ($flags{"PLAYING"} && ! $result->{active}) { return ""; }
 
