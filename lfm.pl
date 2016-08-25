@@ -329,6 +329,69 @@ filter <filter-pattern>...
 
     filter 0.artist.mbid -> id
 
+format '<format-pattern>'
+
+    format takes a flat hash as input and produces a formatted string using the
+    values from the hash. The format pattern consists of groups (as many as
+    you like). A group is surrounded by {} und looks roughly like this:
+
+    {<var preconditions>:<format-string>}
+
+    In the var preconditions section you can put a (space-separated) list of
+    variables. The entire group will only be part of the output if *all* these
+    variables are defined. The list can be empty.
+
+    The format-string section is a string that will be literally copied to the
+    output except for variables prefixed with a %, which will be replaced by
+    their values.
+
+    Groups *cannot* be nested.
+
+    It’s best explained with a bunch of examples:
+
+    {:This will always be printed}
+
+    output: This will always be printed
+
+    {artist title:The song %title is by %artist}
+
+    Assuming both artist and title are defined with values 'Hodor' and 'hodor',
+    the output is: The song hodor is by Hodor
+
+    The variables from the preconditions list can be used several times:
+
+    {h:%h%h%h}
+
+    Assuming h is 'hodor': hodorhodorhodor
+
+    or not used at all:
+
+    {album:I have album information but I won’t tell you}
+
+    This is a good example for the usage of multiple groups:
+
+    {artist title me:%me is playing %artist - %title}{artist title album: (%album)}
+
+@ <names>...
+
+    @ (also dubbed the 'tell-command') can be used to highlight other users. By
+    using the output of any other command. It uses the config option
+
+    $confprefix.pattern.tell
+
+    as format pattern. You can (should) use the 'nicks' and 'text' variables in
+    the pattern. We assume this pattern for examples:
+
+    {nicks text:%text ← %nicks}
+
+    /lfm np | @ Hodor
+
+    might lead to something like: /me is playing Herp - Derp ← Hodor
+
+    You can name as many nicks as you wish:
+
+    /lfm love | @ herp derp hodor foo bar
+
 love [-q|--quiet]
 
     Requires configured auth
