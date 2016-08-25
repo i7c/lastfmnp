@@ -270,6 +270,18 @@ uatracks [-u|--user <user>] [-a|--artist <artist>]
 
     Just like utracks, the result is json.
 
+love [-q|--quiet]
+
+    Requires configured auth
+
+    This command loves the currently playing song (or most recently played).
+    If -q is specified loves the song quietly. If not it will say a message
+    to the current buffer using the format pattern in
+
+    $confprefix.pattern.love
+
+    The variables title and artist are provided.
+
 auth
 
     This command is the first step for authentication against the last.fm API.
