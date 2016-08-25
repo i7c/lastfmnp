@@ -2,6 +2,7 @@ use Regexp::Grammars;
 use Data::Dumper;
 use LWP::UserAgent;
 use JSON;
+use Digest::MD5 qw(md5_hex);
 use strict;
 use warnings;
 
@@ -277,13 +278,33 @@ sub cnf {
     return weechat::config_get("$confprefix.$option");
 }
 
-sub lfmjson {
+sub sign_call {
     my $method = shift;
     my $params = shift;
     my $apikey = weechat::config_string(cnf("apikey"));
-    my $url = BASE_URL . "format=json&api_key=$apikey&method=$method";
+    my $secret = weechat::config_string(cnf("secret"));
+
+    my @parts = ("api_key$apikey", "method$method");
+    foreach my $key (keys %$params) {
+        push @parts, "$key" . $params->{$key};
+    }
+    my @sorted = sort @parts;
+    my $str = join("", @sorted) . $secret;
+    return md5_hex($str);
+}
+
+sub lfmjson {
+    my $method = shift;
+    my $params = shift;
+    my $sign = shift;
+
+    my $apikey = weechat::config_string(cnf("apikey"));
     my $ua = LWP::UserAgent->new;
     $ua->agent("lastfmnp/0.0");
+    if ($sign) {
+        my $signature = sign_call($method, $params);
+        $params->{"api_sig"} = $signature;
+    }
 
     my $rq = HTTP::Request->new(GET => 'https://ws.audioscrobbler.com/2.0/');
     my $content = "format=json&api_key=$apikey&method=$method";
