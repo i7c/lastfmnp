@@ -35,33 +35,18 @@ has all means to 'rewrite' the high-level commands and of course create
 new useful high-level commands with these means. In the following we
 describe all available commands and language features.
 
-There are some essential configuration options which the user must set.
-
-/set plugins.var.perl.$prgname.apikey
-
-must be set to a valid last.fm API-key. You can get one on
-http://www.last.fm/api
-
-If you also want to use methods that require authentication, you need to set
-the shared secret as well:
-
-/set plugins.var.perl.$prgname.secret
-
-/set plugins.var.perl.$prgname.user
-
-should be set to *your* last.fm username. Many commands have a --user
-flag which - if omitted -  will use this username as default value.
-
-/set plugins.var.perl.$prgname.pattern.np \"{artist title me:%me is playing %artist - %title}{artist title album: (%album)}\"
-
-This pattern is essential as it is used by the /$prgname np command.
-
-With these three settings, /$prgname np should already work.
-
-To use the tell function you have to set this pattern:
-
-/set plugins.var.perl.$prgname.pattern.tell \"{nicks text:%text ← %nicks}\"
-
+CONFIGURATION
+*************
+There are some essential configuration options which the user must set. Below
+we describe this minimal setup. Note, that the script now provides an automatic
+way to create all configuration options. You can use /$prgname conf --default
+the first time you run the script and everytime it is updated. It will leave
+existing configurations untouched and save default values for new options. You
+can use iset (or plain old /set) to adapt the config. Some values must be
+provided by the user, such as apikey, secret, user. conf --default will leave
+them empty. conf --default creates all known keys, if you prefer a minimal
+automatic setup, use the --minimal flag instead. For more information refer to
+the section about the conf command below.
 
 SUBSHELLS AND VARIABLES
 ***********************
@@ -206,7 +191,10 @@ AUTHORIZATION
 *************
 
 For API calls that require authentication, you need to retrieve a session key
-from last.fm first. In almost all cases this works as follows:
+from last.fm first. Note that you must set both the 'apikey' and the 'secret'
+option for this to work. Both values for these options are provided by last.fm
+when you create an API key. If both values are set, in almost all cases this
+will suffice to configure the required session key:
 
 1. /$prgname auth
 2. click link and auth
