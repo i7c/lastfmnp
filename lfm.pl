@@ -280,15 +280,17 @@ love [-q|--quiet]
 
     $confprefix.pattern.love
 
-    The variables title and artist are provided.
+    The variables %title and %artist are provided.
 
 hate [-q|--quiet]
+
+    Requires configured auth
 
     Unloves a song. Without quiet say a message to the buffer using the pattern
 
     $confprefix.pattern.hate
 
-    The variables title and artist are provided.
+    The variables %title and %artist are provided.
 
 auth
 
