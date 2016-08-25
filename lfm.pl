@@ -202,6 +202,17 @@ without any '' you can use [ ]. Examples:
 
 /$prgname !test [| dump]
 
+AUTHORIZATION
+*************
+
+For API calls that require authentication, you need to retrieve a session key
+from last.fm first. In almost all cases this works as follows:
+
+1. /$prgname auth
+2. click link and auth
+3. /$prgname session
+4. ???
+5. if all worked fine without errors: PROFIT
 
 COMMANDS
 ********
@@ -258,6 +269,23 @@ uatracks [-u|--user <user>] [-a|--artist <artist>]
     /$prgname \${np -a} artist; uatracks -u xyz
 
     Just like utracks, the result is json.
+
+auth
+
+    This command is the first step for authentication against the last.fm API.
+    It takes no arguments. It initiates a new authentication process and will
+    result in a API token and print a matching link on the weechat buffer. You
+    have to click this link to authorize the the token *before* you move on to
+    the next step. Once you have completed authorization, you may call the
+    session command.
+
+session [-t|--token <token>]
+
+    This is the second step for authorization. *After* you completed the
+    authorization of the token (see /$prgname auth) you may call /lfm session.
+    You can (usually you don’t) specify the token using -t. If you don’t
+    specify it, the command will assume the most recently retrieved token. This
+    only works if you used /$prgname auth for the first step of authorization.
 
 dump
 
