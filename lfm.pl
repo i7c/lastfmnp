@@ -340,6 +340,7 @@ my $lfmparser = qr{
         | <tell>
         | <track>
         | <auth>
+        | <session>
         | <subshell>
         | <variable>
         | <alias>) <tonowhere=(\^)>?
@@ -439,6 +440,12 @@ my $lfmparser = qr{
     <rule: auth>
         auth
 
+    <rule: session>
+        session
+        (
+            (-t|--token) <token=name>
+        )* <ws>
+
     <rule: subshell>
         \$ <in=name>? { <sublfm=lfm> } <out=name>?
 
@@ -524,6 +531,12 @@ sub lfm_track_get_info {
 sub lfm_auth_get_token {
     my $apires = lfmjson("auth.getToken", {}, 1);
     return $apires->{token};
+}
+
+sub lfm_auth_get_session {
+    my $token = shift;
+    my $apires = lfmjson("auth.getSession", {token => $token}, 1);
+    return $apires->{session}->{key};
 }
 
 sub array_take {
@@ -731,6 +744,19 @@ sub uc_auth {
     return "";
 }
 
+sub uc_session {
+    my $options = shift;
+    shift; # ignore previous
+
+    my $token = $options->{token} // weechat::config_string(cnf("token"));
+    weechat::print("", "Retrieving session key from last.fm ...");
+    weechat::print("", "Using token: $token");
+    my $sk = lfm_auth_get_session($token);
+    weechat::config_set_plugin("sk", $sk);
+    weechat::print("", "Session key saved.");
+    return "";
+}
+
 sub uc_subshell {
     my $options = shift;
     my $previous = shift;
@@ -806,6 +832,7 @@ sub process_command {
         "tell" => \&uc_tell,
         "track" => \&uc_track,
         "auth" => \&uc_auth,
+        "session" => \&uc_session,
         "subshell" => \&uc_subshell,
         "variable" => \&uc_variable,
         "alias" => \&uc_alias,
