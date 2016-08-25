@@ -307,6 +307,25 @@ session [-t|--token <token>]
     specify it, the command will assume the most recently retrieved token. This
     only works if you used /$prgname auth for the first step of authorization.
 
+conf [--minimal|--default] [--reset] [--verbose]
+
+    This generates a default config as far as possible. That is, it makes all
+    the config options but some will be left empty (the api key for example).
+    Use the iset script or similar to set all values.
+
+    --minimal only creates the options which are absolutely necessary to use
+    /$prgname, especially the /$prgname np command.
+
+    --default creates all known options that the user can set.
+
+    If you specify --reset, conf will overwrite existing options with their
+    default value *unless* the default value is empty (for example in case of
+    the api key, --reset will not delete your api key because there is no real
+    default value for it).
+
+    If you specify --verbose, conf tells you about options it *would* set if
+    you specified --reset.
+
 dump
 
     Takes anything as input and dumps it to the weechat buffer. This is very
@@ -324,6 +343,27 @@ my %env = ();
 sub cnf {
     my $option = shift;
     return weechat::config_get("$confprefix.$option");
+}
+
+sub cnf_set_default {
+    my $option = shift;
+    my $default = shift;
+    my $overwrite = shift;
+    my $verbose = shift;
+
+    if (! weechat::config_is_set_plugin($option)) {
+        if (! $default) { $default = ""; }
+        weechat::config_set_plugin($option, $default);
+        weechat::print("", "Set $confprefix.$option = $default");
+    } elsif ($overwrite) {
+        if ($default) {
+            weechat::config_set_plugin($option, $default);
+            weechat::print("", "Set $confprefix.$option = $default");
+        }
+    } elsif ($default && $verbose) {
+        weechat::print("",
+            "Would set: $confprefix.$option = $default");
+    }
 }
 
 sub sign_call {
@@ -396,6 +436,7 @@ my $lfmparser = qr{
         | <hate>
         | <auth>
         | <session>
+        | <conf>
         | <subshell>
         | <variable>
         | <alias>) <tonowhere=(\^)>?
@@ -511,6 +552,15 @@ my $lfmparser = qr{
         session
         (
             (-t|--token) <token=name>
+        )* <ws>
+
+    <rule: conf>
+        conf
+        (
+            <minimal=(--minimal)>
+            | <default=(--default)>
+            | <reset=(--reset)>
+            | <verbose=(--verbose)>
         )* <ws>
 
     <rule: subshell>
@@ -882,6 +932,33 @@ sub uc_session {
     return "";
 }
 
+sub uc_conf {
+    my $options = shift;
+    shift; # ignore previous
+
+    my $force = $options->{reset};
+    my $verbose = $options->{verbose};
+    if ($options->{minimal} || $options->{default}) {
+        cnf_set_default("apikey", undef, $force, $verbose);
+        cnf_set_default("user", undef, $force, $verbose);
+        cnf_set_default("pattern.np",
+            "{artist title me:%me is playing %artist - %title}"
+            . "{artist title album: (%album)}",
+            $force, $verbose);
+        cnf_set_default("pattern.tell", "{nicks text:%text ← %nicks}",
+            $force, $verbose);
+        cnf_set_default("who", "/me", $force, $verbose);
+    }
+    if ($options->{default}) {
+        cnf_set_default("secret", undef);
+        cnf_set_default("pattern.hate",
+            "{artist title:I unloved %artist - %title!}", $force, $verbose);
+        cnf_set_default("pattern.love",
+            "{artist title:I love %artist - %title!}", $force, $verbose);
+    }
+    return "";
+}
+
 sub uc_subshell {
     my $options = shift;
     my $previous = shift;
@@ -960,6 +1037,7 @@ sub process_command {
         "hate" => \&uc_hate,
         "auth" => \&uc_auth,
         "session" => \&uc_session,
+        "conf" => \&uc_conf,
         "subshell" => \&uc_subshell,
         "variable" => \&uc_variable,
         "alias" => \&uc_alias,
