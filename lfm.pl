@@ -41,6 +41,11 @@ There are some essential configuration options which the user must set.
 must be set to a valid last.fm API-key. You can get one on
 http://www.last.fm/api
 
+If you also want to use methods that require authentication, you need to set
+the shared secret as well:
+
+/set plugins.var.perl.$prgname.secret
+
 /set plugins.var.perl.$prgname.user
 
 should be set to *your* last.fm username. Many commands have a --user
