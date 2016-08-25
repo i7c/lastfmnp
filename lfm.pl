@@ -282,6 +282,14 @@ love [-q|--quiet]
 
     The variables title and artist are provided.
 
+hate [-q|--quiet]
+
+    Unloves a song. Without quiet say a message to the buffer using the pattern
+
+    $confprefix.pattern.hate
+
+    The variables title and artist are provided.
+
 auth
 
     This command is the first step for authentication against the last.fm API.
@@ -385,6 +393,7 @@ my $lfmparser = qr{
         | <tell>
         | <track>
         | <love>
+        | <hate>
         | <auth>
         | <session>
         | <subshell>
@@ -485,6 +494,12 @@ my $lfmparser = qr{
 
     <rule: love>
         love
+        (
+            <quiet=(-q|--quiet)>
+        )* <ws>
+
+    <rule: hate>
+        hate
         (
             <quiet=(-q|--quiet)>
         )* <ws>
@@ -596,6 +611,15 @@ sub lfm_track_love {
     my $track = shift;
 
     my $apires = lfmjson("track.love", {artist => $artist, track => $track},
+        1, 1);
+    return $apires;
+}
+
+sub lfm_track_hate {
+    my $artist = shift;
+    my $track = shift;
+
+    my $apires = lfmjson("track.unlove", {artist => $artist, track => $track},
         1, 1);
     return $apires;
 }
@@ -808,6 +832,26 @@ sub uc_love {
     return "";
 }
 
+sub uc_hate {
+    my $params = shift;
+    shift; # ignore previous
+
+    my $user = $env{user} // weechat::config_string(cnf("user"));
+    my $result = extract_track_info(array_take(
+            lfm_user_get_recent_tracks($user, 1), 0));
+    my $succ = lfm_track_hate($result->{artist}, $result->{title});
+
+    if (! $succ) {
+        weechat::print("", "unlove command failed! API response:");
+        weechat::print("",  Dumper($succ));
+    }
+    if (! $params->{quiet}) {
+        my $fpattern = weechat::config_string(cnf("pattern.hate"));
+        return format_output($fpattern, $result);
+    }
+    return "";
+}
+
 sub uc_auth {
     my $options = shift;
     shift; # ignore previous
@@ -913,6 +957,7 @@ sub process_command {
         "tell" => \&uc_tell,
         "track" => \&uc_track,
         "love" => \&uc_love,
+        "hate" => \&uc_hate,
         "auth" => \&uc_auth,
         "session" => \&uc_session,
         "subshell" => \&uc_subshell,
