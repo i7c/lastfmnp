@@ -1120,8 +1120,13 @@ if ($ARGV[0] && $ARGV[0] =~ /cli/i) {
     weechat::hook_command("lfm", $LFMHELP,
         "lfm",
         "",
-        "",
-        "lfm", "");
+
+        "np || utracks || uatracks || user || artist || take || extract "
+        . "|| filter || format || dump || tell || track || love || hate "
+        . "|| auth || session || conf || subshell || variable || alias",
+
+        "lfm",
+        "");
     weechat::hook_command("dumpast", "dumps lastfm shit",
         "dumpast",
         "",
