@@ -270,6 +270,11 @@ uatracks [-u|--user <user>] [-a|--artist <artist>]
 
     Just like utracks, the result is json.
 
+user [-u|--user <user>]
+
+    Retrieves basic user information from last.fm. The result is json. If you
+    don’t specify -u, it will retrieve your information from last.fm
+
 love [-q|--quiet]
 
     Requires configured auth
@@ -476,7 +481,10 @@ my $lfmparser = qr{
 
     #### User ####
     <rule: user>
-        user <name>? <ws>
+        user
+        (
+            (-u|--user) <name>
+        )* <ws>
 
     #### Artist ####
     <rule: artist>
