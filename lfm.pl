@@ -450,6 +450,9 @@ conf [--minimal|--default] [--reset] [--verbose]
     If you specify --verbose, conf tells you about options it *would* set if
     you specified --reset.
 
+    If you want to reset a single option, unset it manually and run
+    conf --default *without* the --reset option.
+
 dump
 
     Takes anything as input and dumps it to the weechat buffer. This is very
