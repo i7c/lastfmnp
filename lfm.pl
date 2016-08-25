@@ -292,6 +292,55 @@ artist [-a|--artist <artist>] [-u|--user <user>] [-l|--lang <language>] [-i|--id
     the last.fm-API, I have no idea how many languages are supported. (en, de,
     es, pt work at least).
 
+take <n>
+
+    takes an array from stdin and returns the n-th element on stdout
+
+extract user|track
+
+    This is a convenient shortcut for some frequent filter invocations. It’s
+    often the same bits you want to extract from a response.
+
+    extract user takes a user object of a last.fm-response and returns a flat
+    hash (only one level of key-value-pairs, no nesting) on stdout.
+
+    extract track does the same for track objects.
+
+    Example: reimplement the np command:
+
+    utracks -n 1 | take 0 | extract track
+        | format '{artist title:/me is playing %artist - %title}' 
+
+filter <filter-pattern>...
+
+    filter takes a json object on stdin (with arbitrary deep nesting) and
+    extracts parts of it, providing a *flat* hash on stdout. You can specify
+    a list of comma-separated filter patterns, each pattern looking like this:
+
+        original.value -> newname
+
+    Consider this part of a utracks response:
+
+    [
+      {
+        'name' => 'You Were But a Ghost in My Arms',
+        'mbid' => '592d0ea5-fe50-4f8a-adb9-cc16d1d766bf',
+        'streamable' => '0',
+        'artist' => {
+                      '#text' => 'Agalloch',
+                      'mbid' => '3d46727d-9367-47b8-8b8b-f7b6767f7d57'
+                    },
+
+        ...
+      }
+    ]
+
+
+    This is an array of objects. Now say you want to extract the artist mbid
+    and call the new key 'id'. You could apply filter as follows:
+
+    filter 0.artist.mbid -> id
+
 love [-q|--quiet]
 
     Requires configured auth
