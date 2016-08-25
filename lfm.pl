@@ -325,10 +325,15 @@ sub lfmjson {
     my $method = shift;
     my $params = shift;
     my $sign = shift;
+    my $auth = shift;
 
     my $apikey = weechat::config_string(cnf("apikey"));
     my $ua = LWP::UserAgent->new;
     $ua->agent("lastfmnp/0.0");
+    if ($auth) {
+        my $sk = weechat::config_string(cnf("sk"));
+        $params->{"sk"} = $sk;
+    }
     if ($sign) {
         my $signature = sign_call($method, $params);
         $params->{"api_sig"} = $signature;
