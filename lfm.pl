@@ -372,6 +372,7 @@ my $lfmparser = qr{
         | <dump>
         | <tell>
         | <track>
+        | <love>
         | <auth>
         | <session>
         | <subshell>
@@ -468,6 +469,12 @@ my $lfmparser = qr{
             (-u|--user) <user=name>
             | (-a|--artist) (<artist=name> | '<artist=str>')
             | (-t|--track) (<track=name> | '<track=str>')
+        )* <ws>
+
+    <rule: love>
+        love
+        (
+            <quiet=(-q|--quiet)>
         )* <ws>
 
     <rule: auth>
@@ -570,6 +577,15 @@ sub lfm_auth_get_session {
     my $token = shift;
     my $apires = lfmjson("auth.getSession", {token => $token}, 1);
     return $apires->{session}->{key};
+}
+
+sub lfm_track_love {
+    my $artist = shift;
+    my $track = shift;
+
+    my $apires = lfmjson("track.love", {artist => $artist, track => $track},
+        1, 1);
+    return $apires;
 }
 
 sub array_take {
@@ -760,6 +776,26 @@ sub uc_track {
     return lfm_track_get_info($params);
 }
 
+sub uc_love {
+    my $params = shift;
+    shift; # ignore previous
+
+    my $user = $env{user} // weechat::config_string(cnf("user"));
+    my $result = extract_track_info(array_take(
+            lfm_user_get_recent_tracks($user, 1), 0));
+    my $succ = lfm_track_love($result->{artist}, $result->{title});
+
+    if (! $succ) {
+        weechat::print("", "love command failed! API response:");
+        weechat::print("",  Dumper($succ));
+    }
+    if (! $params->{quiet}) {
+        my $fpattern = weechat::config_string(cnf("pattern.love"));
+        return format_output($fpattern, $result);
+    }
+    return "";
+}
+
 sub uc_auth {
     my $options = shift;
     shift; # ignore previous
@@ -864,6 +900,7 @@ sub process_command {
         "dump" => \&uc_dump,
         "tell" => \&uc_tell,
         "track" => \&uc_track,
+        "love" => \&uc_love,
         "auth" => \&uc_auth,
         "session" => \&uc_session,
         "subshell" => \&uc_subshell,
