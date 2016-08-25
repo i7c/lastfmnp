@@ -224,6 +224,22 @@ np [-u|--user <user>] [-p|--pattern <format pattern>] [<flags>]
 
     You can specify only one of -t -a or -A (or undefined shit happens).
 
+utracks [-u|--user <user>] [-n|--number <number>]
+
+    Retrieves recently played tracks from a user.
+
+    You may specify a user explicitly with -u or supply one by using the
+    environment variable 'user'. If none of those are specified, it defaults
+    to whatever is set in $confprefix.user.
+
+    You can request a certain number of recent tracks by using -n. Please note
+    the limitations given by the last.fm-API. This defaults to 10. You can also
+    use the environment variable 'num' for this option.
+
+    The result of this operation is json so you can access it with filter and
+    similar functions. Note also the special commands 'take' and
+    'extrackt track' which can be useful here.
+
 dump
 
     Takes anything as input and dumps it to the weechat buffer. This is very
@@ -548,9 +564,9 @@ sub uc_np {
 
 sub uc_user_recent_tracks {
 	my $options = shift;
-	my $user = $options->{user} // $env{_user}
+	my $user = $options->{user} // $env{user}
 		// weechat::config_string(cnf("user"));
-	my $number = $options->{number} // $env{_num} // 10;
+	my $number = $options->{number} // $env{num} // 10;
 	return lfm_user_get_recent_tracks($user, $number);
 }
 
