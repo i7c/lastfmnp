@@ -339,6 +339,7 @@ my $lfmparser = qr{
         | <dump>
         | <tell>
         | <track>
+        | <auth>
         | <subshell>
         | <variable>
         | <alias>) <tonowhere=(\^)>?
@@ -435,6 +436,9 @@ my $lfmparser = qr{
             | (-t|--track) (<track=name> | '<track=str>')
         )* <ws>
 
+    <rule: auth>
+        auth
+
     <rule: subshell>
         \$ <in=name>? { <sublfm=lfm> } <out=name>?
 
@@ -515,6 +519,11 @@ sub lfm_track_get_info {
     my $params = shift;
     my $apires = lfmjson("track.getInfo", $params);
     return $apires;
+}
+
+sub lfm_auth_get_token {
+    my $apires = lfmjson("auth.getToken", {}, 1);
+    return $apires->{token};
 }
 
 sub array_take {
@@ -705,6 +714,23 @@ sub uc_track {
     return lfm_track_get_info($params);
 }
 
+sub uc_auth {
+    my $options = shift;
+    shift; # ignore previous
+
+    my $token = lfm_auth_get_token();
+    my $apikey = weechat::config_string(cnf("apikey"));
+
+    weechat::print("", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+    weechat::print("", "Received token: $token");
+    weechat::print("",
+        "Visit https://www.last.fm/api/auth/?api_key=$apikey&token=$token");
+    weechat::print("", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+
+    weechat::config_set_plugin("token", $token);
+    return "";
+}
+
 sub uc_subshell {
     my $options = shift;
     my $previous = shift;
@@ -779,6 +805,7 @@ sub process_command {
         "dump" => \&uc_dump,
         "tell" => \&uc_tell,
         "track" => \&uc_track,
+        "auth" => \&uc_auth,
         "subshell" => \&uc_subshell,
         "variable" => \&uc_variable,
         "alias" => \&uc_alias,
