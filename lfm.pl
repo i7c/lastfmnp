@@ -275,6 +275,23 @@ user [-u|--user <user>]
     Retrieves basic user information from last.fm. The result is json. If you
     don’t specify -u, it will retrieve your information from last.fm
 
+artist [-a|--artist <artist>] [-u|--user <user>] [-l|--lang <language>] [-i|--id <id>]
+
+    Retrieves basic information about an artist. The response is json.
+
+    You can specify the artist with -a aristname. If it contains spaces
+    use -a 'Artistname with spaces'. If -a is not specified, the command reads
+    from stdin or from the environment variable 'artist'.
+    Instead of -a you can use -i with a musicbrainz id as argument.
+
+    If you specify -u, the response will contain personal stats for that user,
+    such as the playcount. Without the -u option, this defaults to yourself
+    ($confprefix.user).
+
+    The -l option sets the language for the response. It is simply passed to
+    the last.fm-API, I have no idea how many languages are supported. (en, de,
+    es, pt work at least).
+
 love [-q|--quiet]
 
     Requires configured auth
@@ -800,11 +817,11 @@ sub uc_artist {
     my $previous = shift;
 
     my $params = {};
-    $params->{artist} = $options->{artist} // $previous // $env{_artist};
-    $params->{user} = $options->{user} // $env{_user}
+    $params->{artist} = $options->{artist} // $previous // $env{artist};
+    $params->{user} = $options->{user} // $env{user}
         // weechat::config_string(cnf("user"));
-    $params->{lang} = $options->{lang} // $env{_lang};
-    $params->{id} = $options->{id};
+    $params->{lang} = $options->{lang} // $env{lang};
+    $params->{id} = $options->{id} // $env{id};
 
     my $artistinfo = lfm_artistget_info($params);
     return $artistinfo;
