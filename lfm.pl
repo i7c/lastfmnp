@@ -14,7 +14,7 @@ my $LFMHELP =
 "$prgname.pl is a weechat plugin that allows to query the last.fm-API in
 several ways and 'say' the results to current buffers.
 
-lfm.pl adds one command to weechat called /$prgname. /$prgname itself
+$prgname.pl adds one command to weechat called /$prgname. /$prgname itself
 accepts a 'command chain' (which can have the length of one, i.e. a
 single command, of course). In a chain the commands are separated either
 by a pipe (|) or by a semicolon (;). The commands are executed from left
@@ -156,24 +156,24 @@ ALIASES
 *******
 
 You can create aliases by setting configuration variables. For example,
-if you set /set plugins.var.perl.lfm.alias.comp_artist to a valid
+if you set /set plugins.var.perl.$prgname.alias.comp_artist to a valid
 command chain as value, you effectifely created the alias comp_artist.
 
 You can execute the alias exactly as any other command by running:
 
-/lfm !comp_artist
+/$prgname !comp_artist
 
 The ! *may* be ommitted if it is still unambigious that you are
 referring to an alias. If in doubt, just add the ! in front. Aliases
 can be used in command chains just like normal commands:
 
-/lfm !comp_artist | dump
+/$prgname !comp_artist | dump
 
 Aliases can take positional arguments. Say you create the following alias
 
-/set plugins.var.perl.lfm.alias.xtracks \"utracks -u \$1 -n \$2\"
+/set plugins.var.perl.$prgname.alias.xtracks \"utracks -u \$1 -n \$2\"
 
-you can use the alias with arguments: /lfm !xtracks iSevenC 3
+you can use the alias with arguments: /$prgname !xtracks iSevenC 3
 
 Arguments can be single words (or numbers for that matter) or
 single-quoted strings. Please note that alias arguments are simple
@@ -185,16 +185,16 @@ by that string *including* the ''. In most cases this is what you want.
 Because aliases work with simple string-based expansion, you can even
 do things like
 
-/set plugins.var.perl.lfm.alias.test \"utracks | \$1\"
+/set plugins.var.perl.$prgname.alias.test \"utracks | \$1\"
 
-/lfm !test dump
+/$prgname !test dump
 
 If you want to replace \$x by a string (more than one word) but
 without any '' you can use [ ]. Examples:
 
-/set plugins.var.perl.lfm.alias.test \"utracks \$1\"
+/set plugins.var.perl.$prgname.alias.test \"utracks \$1\"
 
-/lfm !test [| dump]
+/$prgname !test [| dump]
 
 
 COMMANDS
