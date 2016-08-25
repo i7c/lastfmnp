@@ -240,6 +240,19 @@ utracks [-u|--user <user>] [-n|--number <number>]
     similar functions. Note also the special commands 'take' and
     'extrackt track' which can be useful here.
 
+uatracks [-u|--user <user>] [-a|--artist <artist>]
+
+    This command is much like utracks, but it lets you specify an artist so
+    only tracks of a certain artist are retrieved. The artist can be specified
+    with -a or with the environment variable 'artist'.
+
+    Example: retrieve all played tracks by the currently played artist which
+    user xyz scrobbled:
+
+    /$prgname \${np -a} artist; uatracks -u xyz
+
+    Just like utracks, the result is json.
+
 dump
 
     Takes anything as input and dumps it to the weechat buffer. This is very
@@ -574,9 +587,9 @@ sub uc_user_artist_tracks {
 	my $options = shift;
 	my $previous = shift;
 
-	my $user = $options->{user} // $env{_user}
+	my $user = $options->{user} // $env{user}
 		// weechat::config_string(cnf("user"));
-	my $artist = $options->{artist} // $previous // $env{_artist};
+	my $artist = $options->{artist} // $previous // $env{artist};
 	return lfm_user_get_artist_tracks($user, $artist);
 }
 
