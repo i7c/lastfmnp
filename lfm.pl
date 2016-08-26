@@ -1202,6 +1202,7 @@ sub uc_conf {
             "{artist title:I unloved %artist - %title!}", $force, $verbose);
         cnf_set_default("pattern.love",
             "{artist title:I love %artist - %title!}", $force, $verbose);
+        cnf_set_default("path.alias", "%h/lfm", $force, $verbose);
     }
     return "";
 }
@@ -1247,9 +1248,19 @@ sub uc_alias {
     my $options = shift;
     my $previous = shift;
 
-    my $input = weechat::config_string(cnf("alias." . $options->{name}));
-    if (! $input) {
-        weechat::print("", "ERROR: No such alias: " . $options->{name});
+    my $name = $options->{name};
+    my $weechat_home = weechat::info_get("weechat_dir", "");
+    my $path = weechat::config_string(cnf("path.alias"));
+    $path =~ s/%h/$weechat_home/;
+    $path .= "/$name";
+    my $input;
+    if (-e $path) {
+        local $/=undef;
+        open FILE, $path;
+        $input = <FILE>;
+        close FILE;
+    } else {
+        weechat::print("", "Error: alias file not found: $path");
         return "";
     }
     if ($options->{args}) {
