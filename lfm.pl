@@ -574,6 +574,17 @@ sub load_alias {
     return $input;
 }
 
+sub bind_alias {
+    my $alias = shift;
+    my $args = shift;
+
+    for (my $i = scalar @{$args}; $i > 0; $i--) {
+        my $arg = $args->[$i - 1]->{arg};
+        $alias =~ s/\$$i/$arg/g;
+    }
+    return $alias;
+}
+
 sub sign_call {
     my $method = shift;
     my $params = shift;
@@ -1270,10 +1281,7 @@ sub uc_alias {
     my $input = load_alias($options->{name});
     if (! $input) { return; }
     if ($options->{args}) {
-        for (my $i = scalar @{$options->{args}}; $i > 0; $i--) {
-            my $arg = $options->{args}->[$i - 1]->{arg};
-            $input =~ s/\$$i/$arg/g;
-        }
+        $input = bind_alias($input, $options->{args});
     }
     return process_input($input, $previous);
 }
@@ -1370,7 +1378,8 @@ sub dumpast {
             foreach my $cmd (@{$cmdchain}) {
                 if ($cmd->{"alias"}) {
                     weechat::print("", "Dumping AST for alias " . $cmd->{alias}->{name});
-                    my $input = weechat::config_string(cnf("alias." . $cmd->{alias}->{name}));
+                    my $input = load_alias($cmd->{alias}->{name});
+                    $input = bind_alias($input, $cmd->{alias}->{args});
                     dumpast($data, $buffer, $input);
                 }
             }
