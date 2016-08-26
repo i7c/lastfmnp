@@ -422,6 +422,33 @@ asearch [-n|--num <number>] [-p|--page <number>] <artist>
 
     Returns json.
 
+select <path>
+
+    select is like filter but it extracts a single value. The result is a value,
+    not a flat hash. (Of course the result can be a hash if you select a single
+    hash)
+
+    Consider following json object:
+
+    [
+      {
+        'name' => 'You Were But a Ghost in My Arms',
+        'mbid' => '592d0ea5-fe50-4f8a-adb9-cc16d1d766bf',
+        'streamable' => '0',
+        'artist' => {
+                      '#text' => 'Agalloch',
+                      'mbid' => '3d46727d-9367-47b8-8b8b-f7b6767f7d57'
+                    },
+
+        ...
+      }
+    ]
+
+
+    select 0.artist.mbid
+
+    returns 3d46727d-9367-47b8-8b8b-f7b6767f7d57
+
 auth
 
     This command is the first step for authentication against the last.fm API.
@@ -570,6 +597,7 @@ my $lfmparser = qr{
         | <love>
         | <hate>
         | <asearch>
+        | <select>
         | <auth>
         | <session>
         | <conf>
@@ -690,6 +718,9 @@ my $lfmparser = qr{
             (-n|--num) <num=number>
             | (-p|--page) <page=number>
         )* <ws> (<artist=name> | '<artist=str>')
+
+    <rule: select>
+        select <from=name>
 
     <rule: auth>
         auth
@@ -1046,6 +1077,14 @@ sub uc_artist_search {
     return lfm_artist_search($params);
 }
 
+sub uc_select {
+    my $options = shift;
+    my $data = shift;
+
+    my @pattern = ({from => $options->{from}, to => "result"});
+    return filter($data, \@pattern)->{result};
+}
+
 sub uc_hate {
     my $params = shift;
     shift; # ignore previous
@@ -1200,6 +1239,7 @@ sub process_command {
         "love" => \&uc_love,
         "hate" => \&uc_hate,
         "asearch" => \&uc_artist_search,
+        "select" => \&uc_select,
         "auth" => \&uc_auth,
         "session" => \&uc_session,
         "conf" => \&uc_conf,
