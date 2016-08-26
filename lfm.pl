@@ -13,27 +13,53 @@ my $confprefix = "plugins.var.perl.$prgname";
 my $LFMHELP =
 
 "$prgname.pl is a weechat plugin that allows to query the last.fm-API in
-several ways and 'say' the results to current buffers.
+several ways and 'say' the results to current buffers.  $prgname.pl adds one
+command to weechat called /$prgname, which accepts a 'command chain' as argument.
 
-$prgname.pl adds one command to weechat called /$prgname. /$prgname itself
-accepts a 'command chain' (which can have the length of one, i.e. a
-single command, of course). In a chain the commands are separated either
-by a pipe (|) or by a semicolon (;). The commands are executed from left
-to right and the result of any command is passed to the next command.
-The result of the last command is posted to the chat. Sometimes it might
-be desirable to prevent a command from passing its result to the next
-command in the command chain. In that case you can use a ^ at the end of
-the command to redirect the output to nowhere. I suggest to use the ;
-command separator after a ^ redirect, although the pipe | works all the
-same. Results are also passed to the following command if you use just a
-;. So the separators | and ; are entirely equivalent.
+While previous versions of this script only provided access to high-level
+commands, this version exposes all the internal commands to the user as well and
+allows to define own commands. Usually, the user has all means to 'rewrite' the
+high-level commands and of course create new useful high-level commands with
+these means. In the following we describe all available commands and language
+features.
 
-While previous versions of this script only provided access to
-high-level commands, this version exposes all the internal commands to
-the user as well and allows to define own commands. Usually, the user
-has all means to 'rewrite' the high-level commands and of course create
-new useful high-level commands with these means. In the following we
-describe all available commands and language features.
+COMMAND CHAIN AND INPUT/OUTPUT REDIRECTION
+******************************************
+
+A 'command chain' (which can have the length of one, i.e. a single command, of
+course) is a list of commands separated either by pipes (|) or semicolons (;).
+Both separators are equivalent. The commands are executed from left to right and
+the result of any command is passed to the next command by default. This allows
+for 'processing pipelines': /$prgname cmd1 | cmd2 | cmd3 ...
+
+The result of the last command is posted to the current buffer. Sometimes it
+might be desirable to prevent a command from passing its result to the next
+command in the command chain (or the buffer). In that case you can use a ^ at
+the end of the command to redirect the output to nowhere.
+
+In earlier versions you had to use subshells to redirect input and output from
+and to variables, as in \$ inputVar {cmd1 | cmd2 | cmd3 } outputVar; Now the
+commands themselves support redirection to and from variables. You can use the
+redirection operators < and > to specify source and destination. E.g. the above
+example would look like this: cmd1 <inputVar | cmd2 | cmd3 >outputVar;
+
+There can be *many* output redirectors:
+
+cmd >var1 >var2
+
+which will cause the output of cmd being stored in both var1 and var2. But there
+is only *one* input redirector. The input redirector must be before the output
+redirectors. So the general syntax is summed up as:
+
+<command> [<invar] [>outvar ...] [^]
+
+The use of the output redirector will not consume the output of the command, so
+even if you use >var you still need to use the ^ operator to silence the
+command.
+
+The 'old' way to store output in vars with subshells (\${}) can still be used
+with the special env variable on the output (\${command} env;), but for all
+other cases the redirectors are the preferred method.
 
 CONFIGURATION
 *************
@@ -661,7 +687,8 @@ my $lfmparser = qr{
         | <conf>
         | <subshell>
         | <variable>
-        | <alias>) <tonowhere=(\^)>?
+        | <alias>)
+        (\< <fromvar=name>)? (\> <[tovar=name]>+ % \>)?  <tonowhere=(\^)>?
 
 
     #### NP Command ####
@@ -1320,7 +1347,14 @@ sub process_command {
 
     for my $key (keys %{ $cmd } ) {
         if ($key && $callmap{$key}) {
+            $prev = $env{$cmd->{fromvar}} if ($cmd->{fromvar});
             my $result = $callmap{$key}->($cmd->{$key}, $prev);
+            # possibly redirect result to variables
+            if ($cmd->{tovar}) {
+                for my $var (@{$cmd->{tovar}}) {
+                    $env{$var} = $result;
+                }
+            }
             return $result;
         }
     }
