@@ -449,6 +449,33 @@ select <path>
 
     returns 3d46727d-9367-47b8-8b8b-f7b6767f7d57
 
+reduce <subshell>
+
+    reduce is a simple yet powerful command. It takes only arrays as input and
+    produces an array as output. You must specify a subshell. If you specify
+    invars or outvars for the subshell, they will be ignored. reduce will strip
+    the variables from the subshell. Only the command chain matters. If you use
+    a nested subshell inside the command chain, it will work as expected (with
+    variables).
+
+    reduce will execute the command chain once for each entry in the array and
+    will provide this entry as input for the first command. The result of the
+    chain will be stored in the result array.
+
+    Example invocation:
+
+    asearch 'horse' | select results.artistmatches.artist | reduce \${select name} | dump
+
+    Result:
+
+    \$VAR1 = [
+              'Band of Horses',
+              'HORSE the band',
+              'Horse Feathers',
+              '16 Horsepower',
+              'Neil Young & Crazy Horse'
+            ];
+
 auth
 
     This command is the first step for authentication against the last.fm API.
@@ -598,6 +625,7 @@ my $lfmparser = qr{
         | <hate>
         | <asearch>
         | <select>
+        | <reduce>
         | <auth>
         | <session>
         | <conf>
@@ -721,6 +749,9 @@ my $lfmparser = qr{
 
     <rule: select>
         select <from=name>
+
+    <rule: reduce>
+        reduce <by=subshell>
 
     <rule: auth>
         auth
@@ -1085,6 +1116,19 @@ sub uc_select {
     return filter($data, \@pattern)->{result};
 }
 
+sub uc_reduce {
+    my $options = shift;
+    my $data = shift;
+
+    my $result = [];
+    foreach my $entry (@{$data}) {
+        my $res = process_cmdchain($options->{by}->{sublfm}->{cmdchain},
+            $entry);
+        push @{$result}, $res;
+    }
+    return $result;
+}
+
 sub uc_hate {
     my $params = shift;
     shift; # ignore previous
@@ -1240,6 +1284,7 @@ sub process_command {
         "hate" => \&uc_hate,
         "asearch" => \&uc_artist_search,
         "select" => \&uc_select,
+        "reduce" => \&uc_reduce,
         "auth" => \&uc_auth,
         "session" => \&uc_session,
         "conf" => \&uc_conf,
