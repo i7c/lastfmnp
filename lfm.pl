@@ -682,6 +682,7 @@ my $lfmparser = qr{
         | <asearch>
         | <select>
         | <amap>
+        | <join>
         | <auth>
         | <session>
         | <conf>
@@ -809,6 +810,9 @@ my $lfmparser = qr{
 
     <rule: amap>
         amap <by=subshell>
+
+    <rule: join>
+        join (<sep=name> | '<sep=str>')
 
     <rule: auth>
         auth
@@ -1186,6 +1190,12 @@ sub uc_amap {
     return $result;
 }
 
+sub uc_join {
+    my $options = shift;
+    my $data = shift;
+    return join($options->{sep}, @{$data});
+}
+
 sub uc_hate {
     my $params = shift;
     shift; # ignore previous
@@ -1335,6 +1345,7 @@ sub process_command {
         "asearch" => \&uc_artist_search,
         "select" => \&uc_select,
         "amap" => \&uc_amap,
+        "join" => \&uc_join,
         "auth" => \&uc_auth,
         "session" => \&uc_session,
         "conf" => \&uc_conf,
