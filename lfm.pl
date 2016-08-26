@@ -832,7 +832,7 @@ my $lfmparser = qr{
         \$ <in=name>? { <sublfm=lfm> } <out=name>?
 
     <rule: variable>
-        \$ \( ('<value=str>' | <value=name>) \) <out=name>?
+        let <var=name> = ('<value=str>' | <value=name> | <value=number>)
 
     #### Aliases ####
     <rule: alias>
@@ -1295,9 +1295,7 @@ sub uc_variable {
     my $previous = shift;
 
     my $value = $options->{value};
-    if ($options->{out}) {
-        $env{$options->{out}} = $value;
-    }
+    $env{$options->{var}} = $value;
     return $value;
 }
 
