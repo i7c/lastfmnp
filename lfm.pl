@@ -555,6 +555,25 @@ sub cnf_set_default {
     }
 }
 
+sub load_alias {
+    my $name = shift;
+    my $weechat_home = weechat::info_get("weechat_dir", "");
+    my $path = weechat::config_string(cnf("path.alias"));
+    $path =~ s/%h/$weechat_home/;
+    $path .= "/$name";
+    my $input;
+    if (-e $path) {
+        local $/=undef;
+        open FILE, $path;
+        $input = <FILE>;
+        close FILE;
+    } else {
+        weechat::print("", "Error: alias file not found: $path");
+        return "";
+    }
+    return $input;
+}
+
 sub sign_call {
     my $method = shift;
     my $params = shift;
@@ -1248,21 +1267,8 @@ sub uc_alias {
     my $options = shift;
     my $previous = shift;
 
-    my $name = $options->{name};
-    my $weechat_home = weechat::info_get("weechat_dir", "");
-    my $path = weechat::config_string(cnf("path.alias"));
-    $path =~ s/%h/$weechat_home/;
-    $path .= "/$name";
-    my $input;
-    if (-e $path) {
-        local $/=undef;
-        open FILE, $path;
-        $input = <FILE>;
-        close FILE;
-    } else {
-        weechat::print("", "Error: alias file not found: $path");
-        return "";
-    }
+    my $input = load_alias($options->{name});
+    if (! $input) { return; }
     if ($options->{args}) {
         for (my $i = scalar @{$options->{args}}; $i > 0; $i--) {
             my $arg = $options->{args}->[$i - 1]->{arg};
