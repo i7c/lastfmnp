@@ -475,22 +475,22 @@ select <path>
 
     returns 3d46727d-9367-47b8-8b8b-f7b6767f7d57
 
-reduce <subshell>
+amap <subshell>
 
-    reduce is a simple yet powerful command. It takes only arrays as input and
+    amap is a simple yet powerful command. It takes only an array as input and
     produces an array as output. You must specify a subshell. If you specify
-    invars or outvars for the subshell, they will be ignored. reduce will strip
+    invars or outvars for the subshell, they will be ignored. amap will strip
     the variables from the subshell. Only the command chain matters. If you use
     a nested subshell inside the command chain, it will work as expected (with
     variables).
 
-    reduce will execute the command chain once for each entry in the array and
+    amap will execute the command chain once for each entry in the array and
     will provide this entry as input for the first command. The result of the
     chain will be stored in the result array.
 
     Example invocation:
 
-    asearch 'horse' | select results.artistmatches.artist | reduce \${select name} | dump
+    asearch 'horse' | select results.artistmatches.artist | amap \${select name} | dump
 
     Result:
 
@@ -681,7 +681,7 @@ my $lfmparser = qr{
         | <hate>
         | <asearch>
         | <select>
-        | <reduce>
+        | <amap>
         | <auth>
         | <session>
         | <conf>
@@ -807,8 +807,8 @@ my $lfmparser = qr{
     <rule: select>
         select <from=name>
 
-    <rule: reduce>
-        reduce <by=subshell>
+    <rule: amap>
+        amap <by=subshell>
 
     <rule: auth>
         auth
@@ -1173,7 +1173,7 @@ sub uc_select {
     return filter($data, \@pattern)->{result};
 }
 
-sub uc_reduce {
+sub uc_amap {
     my $options = shift;
     my $data = shift;
 
@@ -1336,7 +1336,7 @@ sub process_command {
         "hate" => \&uc_hate,
         "asearch" => \&uc_artist_search,
         "select" => \&uc_select,
-        "reduce" => \&uc_reduce,
+        "amap" => \&uc_amap,
         "auth" => \&uc_auth,
         "session" => \&uc_session,
         "conf" => \&uc_conf,
