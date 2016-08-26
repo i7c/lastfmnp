@@ -414,6 +414,14 @@ hate [-q|--quiet]
 
     The variables %title and %artist are provided.
 
+asearch [-n|--num <number>] [-p|--page <number>] <artist>
+
+    Performs an artist search on last.fm. You can limit the number of results
+    with -n (defaults to 5) and retrive the n-th page using -p n.
+    <artist> can be a single word or a 'single quoted string'.
+
+    Returns json.
+
 auth
 
     This command is the first step for authentication against the last.fm API.
