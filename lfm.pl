@@ -561,6 +561,7 @@ my $lfmparser = qr{
         | <track>
         | <love>
         | <hate>
+        | <asearch>
         | <auth>
         | <session>
         | <conf>
@@ -674,6 +675,13 @@ my $lfmparser = qr{
         (
             <quiet=(-q|--quiet)>
         )* <ws>
+
+    <rule: asearch>
+        asearch
+        (
+            (-n|--num) <num=number>
+            | (-p|--page) <page=number>
+        )* <ws> (<artist=name> | '<artist=str>')
 
     <rule: auth>
         auth
@@ -801,6 +809,13 @@ sub lfm_track_hate {
 
     my $apires = lfmjson("track.unlove", {artist => $artist, track => $track},
         1, 1);
+    return $apires;
+}
+
+sub lfm_artist_search {
+    my $params = shift;
+
+    my $apires = lfmjson("artist.search", $params);
     return $apires;
 }
 
@@ -1012,6 +1027,17 @@ sub uc_love {
     return "";
 }
 
+sub uc_artist_search {
+    my $options = shift;
+    my $previous = shift;
+
+    my $params = {};
+    $params->{artist} = $options->{artist} // $previous // $env{artist};
+    $params->{limit} = $options->{num} // $env{num} // 5;
+    $params->{page} = $options->{page} // $env{page} // 1;
+    return lfm_artist_search($params);
+}
+
 sub uc_hate {
     my $params = shift;
     shift; # ignore previous
@@ -1165,6 +1191,7 @@ sub process_command {
         "track" => \&uc_track,
         "love" => \&uc_love,
         "hate" => \&uc_hate,
+        "asearch" => \&uc_artist_search,
         "auth" => \&uc_auth,
         "session" => \&uc_session,
         "conf" => \&uc_conf,
