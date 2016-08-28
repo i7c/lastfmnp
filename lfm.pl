@@ -683,6 +683,7 @@ my $lfmparser = qr{
         | <select>
         | <amap>
         | <join>
+        | <cp>
         | <auth>
         | <session>
         | <conf>
@@ -803,7 +804,7 @@ my $lfmparser = qr{
         (
             (-n|--num) <num=number>
             | (-p|--page) <page=number>
-        )* <ws> (<artist=name> | '<artist=str>')
+        )* <ws> (<artist=name> | '<artist=str>')?
 
     <rule: select>
         select <from=name>
@@ -813,6 +814,9 @@ my $lfmparser = qr{
 
     <rule: join>
         join (<sep=name> | '<sep=str>')
+
+    <rule: cp>
+        cp
 
     <rule: auth>
         auth
@@ -1196,6 +1200,12 @@ sub uc_join {
     return join($options->{sep}, @{$data});
 }
 
+sub uc_cp {
+    my $options = shift;
+    my $input = shift;
+    return $input;
+}
+
 sub uc_hate {
     my $params = shift;
     shift; # ignore previous
@@ -1346,6 +1356,7 @@ sub process_command {
         "select" => \&uc_select,
         "amap" => \&uc_amap,
         "join" => \&uc_join,
+        "cp" => \&uc_cp,
         "auth" => \&uc_auth,
         "session" => \&uc_session,
         "conf" => \&uc_conf,
