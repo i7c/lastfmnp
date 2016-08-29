@@ -680,6 +680,7 @@ my $lfmparser = qr{
         | <love>
         | <hate>
         | <asearch>
+        | <tsearch>
         | <select>
         | <amap>
         | <join>
@@ -805,6 +806,13 @@ my $lfmparser = qr{
             (-n|--num) <num=number>
             | (-p|--page) <page=number>
         )* <ws> (<artist=name> | '<artist=str>')?
+
+    <rule: tsearch>
+        tsearch
+        (
+            (-n|--num) <num=number>
+            | (-p|--page) <page=number>
+        )* <ws> (<track=name> | '<track=str>')?
 
     <rule: select>
         select <from=name>
@@ -951,6 +959,13 @@ sub lfm_artist_search {
     my $params = shift;
 
     my $apires = lfmjson("artist.search", $params);
+    return $apires;
+}
+
+sub lfm_track_search {
+    my $params = shift;
+
+    my $apires = lfmjson("track.search", $params);
     return $apires;
 }
 
@@ -1173,6 +1188,17 @@ sub uc_artist_search {
     return lfm_artist_search($params);
 }
 
+sub uc_track_search {
+    my $options = shift;
+    my $previous = shift;
+
+    my $params = {};
+    $params->{track} = $options->{track} // $previous // $env{track};
+    $params->{limit} = $options->{num} // $env{num} // 5;
+    $params->{page} = $options->{page} // $env{page} // 1;
+    return lfm_track_search($params);
+}
+
 sub uc_select {
     my $options = shift;
     my $data = shift;
@@ -1353,6 +1379,7 @@ sub process_command {
         "love" => \&uc_love,
         "hate" => \&uc_hate,
         "asearch" => \&uc_artist_search,
+        "tsearch" => \&uc_track_search,
         "select" => \&uc_select,
         "amap" => \&uc_amap,
         "join" => \&uc_join,
