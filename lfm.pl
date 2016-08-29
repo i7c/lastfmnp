@@ -448,6 +448,14 @@ asearch [-n|--num <number>] [-p|--page <number>] <artist>
 
     Returns json.
 
+tsearch [-n|--num <number>] [-p|--page <number>] <track>
+
+    Performs a track search on last.fm. You can limit the number of results
+    with -n (defaults to 5) and retrive the n-th page using -p n.
+    <track> can be a single word or a 'single quoted string'.
+
+    Returns json.
+
 select <path>
 
     select is like filter but it extracts a single value. The result is a value,
