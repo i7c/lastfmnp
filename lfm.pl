@@ -1541,7 +1541,7 @@ sub dumpast {
     }
 }
 
-if ($ARGV[0] && $ARGV[0] =~ /cli/i) {
+if ($ARGV[0] && $ARGV[0] =~ /-p/i) {
     $weechat = 0;
     %env = ();
     $env{env} = \%env;
