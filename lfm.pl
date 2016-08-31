@@ -1563,12 +1563,9 @@ sub dumpast {
     }
 }
 
-if ($ARGV[0] && $ARGV[0] =~ /-p/i) {
-    $weechat = 0;
-    %env = ();
-    $env{env} = \%env;
-    print process_input($ARGV[1]);
-} else {
+### Script loading/starting routine ###
+if (defined &{"weechat::register"}) {
+    # weechat
     weechat::register("lfm", "i7c", "0.3", "GPL3", "Prints last.fm shit", "", "");
     weechat::hook_command("lfm", $LFMHELP,
         "lfm",
@@ -1585,5 +1582,10 @@ if ($ARGV[0] && $ARGV[0] =~ /-p/i) {
         "",
         "",
         "dumpast", "");
+} elsif ($ARGV[0] && $ARGV[0] =~ /-p/i) {
+    # standalone if -p is passed
+    $weechat = 0;
+    %env = ();
+    $env{env} = \%env;
+    print process_input($ARGV[1]);
 }
-
