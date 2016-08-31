@@ -769,7 +769,7 @@ my $lfmparser = qr{
         np
         (
             (-u|--user) <np_user=(\w+)>
-            | (-p|--pattern) '<np_fpattern=fpattern>'
+            | (-p|--pattern) "<np_fpattern=fpattern>"
         )*
         <[np_flags]>* <ws>
 
@@ -805,7 +805,7 @@ my $lfmparser = qr{
     <rule: artist>
         artist
         (
-            (-a|--artist) (<artist=name> | '<artist=str>')
+            (-a|--artist) (<artist=name> | "<artist=str>")
             | (-u|--user) <user=name>
             | (-l|--lang) <lang=name>
             | (-i|--id) <id=name>
@@ -829,10 +829,10 @@ my $lfmparser = qr{
 
     #### Format command ####
     <rule: format>
-        format '<fpattern>'
+        format "<fpattern>"
 
     <rule: fpattern>
-        [^']+
+        [^"]+
 
     #### Dump ####
     <rule: dump>
@@ -844,7 +844,7 @@ my $lfmparser = qr{
     #### Names ####
     <rule: name> [.:\#?a-zA-Z0-9_`\[\]-]+
 
-    <rule: str> [^']+
+    <rule: str> [^"]+
 
     #### Numbers ####
     <rule: number> [0-9]+
@@ -854,8 +854,8 @@ my $lfmparser = qr{
         track
         (
             (-u|--user) <user=name>
-            | (-a|--artist) (<artist=name> | '<artist=str>')
-            | (-t|--track) (<track=name> | '<track=str>')
+            | (-a|--artist) (<artist=name> | "<artist=str>")
+            | (-t|--track) (<track=name> | "<track=str>")
         )* <ws>
 
     <rule: love>
@@ -875,14 +875,14 @@ my $lfmparser = qr{
         (
             (-n|--num) <num=number>
             | (-p|--page) <page=number>
-        )* <ws> (<artist=name> | '<artist=str>')?
+        )* <ws> (<artist=name> | "<artist=str>")?
 
     <rule: tsearch>
         tsearch
         (
             (-n|--num) <num=number>
             | (-p|--page) <page=number>
-        )* <ws> (<track=name> | '<track=str>')?
+        )* <ws> (<track=name> | "<track=str>")?
 
     <rule: select>
         select <from=name>
@@ -891,7 +891,7 @@ my $lfmparser = qr{
         amap <by=subshell>
 
     <rule: join>
-        join (<sep=name> | '<sep=str>')
+        join (<sep=name> | "<sep=str>")
 
     <rule: cp>
         cp
@@ -918,14 +918,14 @@ my $lfmparser = qr{
         \$ <in=name>? { <sublfm=lfm> } <out=name>?
 
     <rule: variable>
-        let <var=name> = ('<value=str>' | <value=name> | <value=number>)
+        let <var=name> = ("<value=str>" | <value=name> | <value=number>)
 
     #### Aliases ####
     <rule: alias>
         !? <name> <[args=aliasarg]>*
 
     <rule: aliasarg>
-        (<arg=(\w+)> | <arg=('[^']*')> | \[<arg=([^\]]*)>\])
+        (<arg=(\w+)> | <arg=("[^"]*")> | \[<arg=([^\]]*)>\])
 };
 
 sub format_output {
