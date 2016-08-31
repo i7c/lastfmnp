@@ -575,7 +575,7 @@ sub lfm_print {
         weechat::command($buffer, $what);
     } else {
         #default to stdout
-        print $what;
+        print "$what\n";
     }
 }
 
@@ -586,7 +586,7 @@ sub lfm_error {
         weechat::print("", "[lfm error] $what");
     } else {
         #default to stdout
-        print STDERR "[lfm error] $what";
+        print STDERR "[lfm error] $what\n";
     }
 }
 
@@ -597,7 +597,7 @@ sub lfm_info {
         weechat::print("", "[lfm info] $what");
     } else {
         #default to stdout
-        print STDERR "[lfm info] $what";
+        print STDERR "[lfm info] $what\n";
     }
 }
 
