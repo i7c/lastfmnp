@@ -662,12 +662,21 @@ sub cnf_set_default {
     }
 }
 
+sub alias_path {
+    my $name = shift;
+
+    my $path = cnf_str(cnf("path.alias"));
+    if ($weechat) {
+        my $weechat_home = weechat::info_get("weechat_dir", "");
+        $path =~ s/%h/$weechat_home/;
+    }
+    return $path . "/$name";
+}
+
+
 sub load_alias {
     my $name = shift;
-    my $weechat_home = weechat::info_get("weechat_dir", "");
-    my $path = cnf_str(cnf("path.alias"));
-    $path =~ s/%h/$weechat_home/;
-    $path .= "/$name";
+    my $path = alias_path($name);
     my $input;
     if (-e $path) {
         local $/=undef;
