@@ -609,7 +609,24 @@ sub weechat_only {
 
 sub cnf {
     my $option = shift;
-    return weechat::config_get("$confprefix.$option");
+
+    if ($weechat) {
+        return weechat::config_get("$confprefix.$option");
+    } else {
+        $option =~ s/\./_/g;
+        $option = "LFM_$option";
+        return $ENV{$option};
+    }
+}
+
+sub cnf_str {
+    my $option = shift;
+
+    if ($weechat) {
+        return weechat::config_str($option);
+    } else {
+        return $option;
+    }
 }
 
 sub cnf_set_default {
@@ -617,6 +634,8 @@ sub cnf_set_default {
     my $default = shift;
     my $overwrite = shift;
     my $verbose = shift;
+
+    weechat_only;
 
     if (! weechat::config_is_set_plugin($option)) {
         if (! $default) { $default = ""; }
@@ -635,7 +654,7 @@ sub cnf_set_default {
 sub load_alias {
     my $name = shift;
     my $weechat_home = weechat::info_get("weechat_dir", "");
-    my $path = weechat::config_string(cnf("path.alias"));
+    my $path = cnf_str(cnf("path.alias"));
     $path =~ s/%h/$weechat_home/;
     $path .= "/$name";
     my $input;
@@ -665,8 +684,8 @@ sub bind_alias {
 sub sign_call {
     my $method = shift;
     my $params = shift;
-    my $apikey = weechat::config_string(cnf("apikey"));
-    my $secret = weechat::config_string(cnf("secret"));
+    my $apikey = cnf_str(cnf("apikey"));
+    my $secret = cnf_str(cnf("secret"));
 
     my @parts = ("api_key$apikey", "method$method");
     foreach my $key (keys %$params) {
@@ -683,11 +702,11 @@ sub lfmjson {
     my $sign = shift;
     my $auth = shift;
 
-    my $apikey = weechat::config_string(cnf("apikey"));
+    my $apikey = cnf_str(cnf("apikey"));
     my $ua = LWP::UserAgent->new;
     $ua->agent("lastfmnp/0.0");
     if ($auth) {
-        my $sk = weechat::config_string(cnf("sk"));
+        my $sk = cnf_str(cnf("sk"));
         $params->{"sk"} = $sk;
     }
     if ($sign) {
@@ -1085,14 +1104,14 @@ sub uc_np {
     my $options = shift;
     my %flags = map { $_ => 1 }  @{ $options->{np_flags} };
     my $user = $options->{np_user} // $env{user}
-        // weechat::config_string(cnf("user"));
-    my $fpattern = $options->{np_fpattern} // weechat::config_string(cnf("pattern.np"));
+        // cnf_str(cnf("user"));
+    my $fpattern = $options->{np_fpattern} // cnf_str(cnf("pattern.np"));
 
     my $result =
         extract_track_info(array_take(
                 lfm_user_get_recent_tracks($user, 1), 0));
     $result->{who} = $options->{np_user} // $env{user}
-        // weechat::config_string(cnf("who"));
+        // cnf_str(cnf("who"));
     $result->{me} = $options->{np_user} // $env{user} // "/me";
 
     if ($flags{"PLAYING"} && ! $result->{active}) { return ""; }
@@ -1107,7 +1126,7 @@ sub uc_np {
 sub uc_user_recent_tracks {
     my $options = shift;
     my $user = $options->{user} // $env{user}
-        // weechat::config_string(cnf("user"));
+        // cnf_str(cnf("user"));
     my $number = $options->{number} // $env{num} // 10;
     return lfm_user_get_recent_tracks($user, $number);
 }
@@ -1117,7 +1136,7 @@ sub uc_user_artist_tracks {
     my $previous = shift;
 
     my $user = $options->{user} // $env{user}
-        // weechat::config_string(cnf("user"));
+        // cnf_str(cnf("user"));
     my $artist = $options->{artist} // $previous // $env{artist};
     return lfm_user_get_artist_tracks($user, $artist);
 }
@@ -1126,7 +1145,7 @@ sub uc_user {
     my $options = shift;
 
     my $user = $options->{name} // $env{_user}
-        // weechat::config_string(cnf("user"));
+        // cnf_str(cnf("user"));
     my $userinfo = lfm_user_get_info($user);
     return $userinfo;
 }
@@ -1138,7 +1157,7 @@ sub uc_artist {
     my $params = {};
     $params->{artist} = $options->{artist} // $previous // $env{artist};
     $params->{user} = $options->{user} // $env{user}
-        // weechat::config_string(cnf("user"));
+        // cnf_str(cnf("user"));
     $params->{lang} = $options->{lang} // $env{lang};
     $params->{id} = $options->{id} // $env{id};
 
@@ -1191,7 +1210,7 @@ sub uc_tell {
 
     my @nicks = @{ $options->{name} };
     my $nickstring = join(", ", @nicks);
-    my $fpattern = $env{_tellpattern} // weechat::config_string(cnf("pattern.tell"));
+    my $fpattern = $env{_tellpattern} // cnf_str(cnf("pattern.tell"));
     return format_output($fpattern, { nicks => $nickstring, text => $text});
 }
 
@@ -1203,7 +1222,7 @@ sub uc_track {
     $params->{artist} = $options->{artist} // $previous->{artist} // $env{_artist};
     $params->{track} = $options->{track} // $previous->{track} // $env{_track};
     $params->{username} = $options->{user} // $previous->{user} // $env{_user}
-        // weechat::config_string(cnf("user"));
+        // cnf_str(cnf("user"));
     $params->{mbid} = $options->{id} // $previous->{id} // $env{_id};
     return lfm_track_get_info($params);
 }
@@ -1212,7 +1231,7 @@ sub uc_love {
     my $params = shift;
     shift; # ignore previous
 
-    my $user = $env{user} // weechat::config_string(cnf("user"));
+    my $user = $env{user} // cnf_str(cnf("user"));
     my $result = extract_track_info(array_take(
             lfm_user_get_recent_tracks($user, 1), 0));
     my $succ = lfm_track_love($result->{artist}, $result->{title});
@@ -1222,7 +1241,7 @@ sub uc_love {
         lfm_error(Dumper($succ));
     }
     if (! $params->{quiet}) {
-        my $fpattern = weechat::config_string(cnf("pattern.love"));
+        my $fpattern = cnf_str(cnf("pattern.love"));
         return format_output($fpattern, $result);
     }
     return "";
@@ -1287,7 +1306,7 @@ sub uc_hate {
     my $params = shift;
     shift; # ignore previous
 
-    my $user = $env{user} // weechat::config_string(cnf("user"));
+    my $user = $env{user} // cnf_str(cnf("user"));
     my $result = extract_track_info(array_take(
             lfm_user_get_recent_tracks($user, 1), 0));
     my $succ = lfm_track_hate($result->{artist}, $result->{title});
@@ -1297,7 +1316,7 @@ sub uc_hate {
         lfm_error(Dumper($succ));
     }
     if (! $params->{quiet}) {
-        my $fpattern = weechat::config_string(cnf("pattern.hate"));
+        my $fpattern = cnf_str(cnf("pattern.hate"));
         return format_output($fpattern, $result);
     }
     return "";
@@ -1308,7 +1327,7 @@ sub uc_auth {
     shift; # ignore previous
 
     my $token = lfm_auth_get_token();
-    my $apikey = weechat::config_string(cnf("apikey"));
+    my $apikey = cnf_str(cnf("apikey"));
 
     lfm_info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
     lfm_info("Received token: $token");
@@ -1323,7 +1342,7 @@ sub uc_session {
     my $options = shift;
     shift; # ignore previous
 
-    my $token = $options->{token} // weechat::config_string(cnf("token"));
+    my $token = $options->{token} // cnf_str(cnf("token"));
     lfm_info("Retrieving session key from last.fm ...");
     lfm_info("Using token: $token");
     my $sk = lfm_auth_get_session($token);
