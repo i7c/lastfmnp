@@ -624,7 +624,7 @@ sub cnf_str {
     my $option = shift;
 
     if ($weechat) {
-        return weechat::config_str($option);
+        return weechat::config_string($option);
     } else {
         return $option;
     }
