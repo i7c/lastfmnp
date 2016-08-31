@@ -1,0 +1,12 @@
+#!/bin/bash
+CONFIG="lfm.conf"
+
+[[ ! -e $CONFIG ]] && {
+echo '************************************************************************
+lfm.conf not found
+
+You can create a default config using lfm conf --default > lfm.conf
+and then adapt it to your needs.
+************************************************************************' > /dev/stderr
+} || . $CONFIG;
+perl lfm.pl -p "$*"
