@@ -1524,6 +1524,8 @@ sub dumpast {
 
 if ($ARGV[0] && $ARGV[0] =~ /cli/i) {
     $weechat = 0;
+    %env = ();
+    $env{env} = \%env;
     print process_input($ARGV[1]);
 } else {
     weechat::register("lfm", "i7c", "0.3", "GPL3", "Prints last.fm shit", "", "");
