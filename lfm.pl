@@ -1589,3 +1589,5 @@ if (defined &{"weechat::register"}) {
     $env{env} = \%env;
     print process_input($ARGV[1]);
 }
+
+# vim: ts=4:sw=4:et
