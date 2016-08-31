@@ -6,6 +6,9 @@ use Digest::MD5 qw(md5_hex);
 use strict;
 use warnings;
 
+binmode(STDOUT, ":utf8");
+
+
 use constant BASE_URL => 'https://ws.audioscrobbler.com/2.0/?';
 my $prgname = "lfm";
 my $confprefix = "plugins.var.perl.$prgname";
@@ -560,8 +563,6 @@ dump
     /$prgname user | dump
 ";
 
-binmode(STDOUT, ":utf8");
-
 my %env = ();
 
 
@@ -635,19 +636,29 @@ sub cnf_set_default {
     my $overwrite = shift;
     my $verbose = shift;
 
-    weechat_only;
-
-    if (! weechat::config_is_set_plugin($option)) {
-        if (! $default) { $default = ""; }
-        weechat::config_set_plugin($option, $default);
-        lfm_info("Set $confprefix.$option = $default");
-    } elsif ($overwrite) {
-        if ($default) {
+    if ($weechat) {
+        if (! weechat::config_is_set_plugin($option)) {
+            if (! $default) { $default = ""; }
             weechat::config_set_plugin($option, $default);
             lfm_info("Set $confprefix.$option = $default");
+        } elsif ($overwrite) {
+            if ($default) {
+                weechat::config_set_plugin($option, $default);
+                lfm_info("Set $confprefix.$option = $default");
+            }
+        } elsif ($default && $verbose) {
+            lfm_info("Would set: $confprefix.$option = $default");
         }
-    } elsif ($default && $verbose) {
-        lfm_info("Would set: $confprefix.$option = $default");
+    } else {
+        $option =~ s/\./_/g;
+        $option = "LFM_$option";
+        my $val;
+        if ($overwrite) {
+            $val = $default // $ENV{$option} // "";
+        } else {
+            $val = $ENV{$option} // $default // "";
+        }
+        print "export $option=\"$val\"\n";
     }
 }
 
@@ -1354,8 +1365,6 @@ sub uc_session {
 sub uc_conf {
     my $options = shift;
     shift; # ignore previous
-
-    weechat_only;
 
     my $force = $options->{reset};
     my $verbose = $options->{verbose};
