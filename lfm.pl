@@ -600,6 +600,13 @@ sub lfm_info {
     }
 }
 
+sub weechat_only {
+    if (! $weechat) {
+        lfm_error("Cannot perform this action unless running as weechat plugin.");
+        exit 1;
+    }
+}
+
 sub cnf {
     my $option = shift;
     return weechat::config_get("$confprefix.$option");
@@ -1328,6 +1335,8 @@ sub uc_session {
 sub uc_conf {
     my $options = shift;
     shift; # ignore previous
+
+    weechat_only;
 
     my $force = $options->{reset};
     my $verbose = $options->{verbose};
