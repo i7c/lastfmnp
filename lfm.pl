@@ -1337,6 +1337,8 @@ sub uc_auth {
     my $options = shift;
     shift; # ignore previous
 
+    weechat_only;
+
     my $token = lfm_auth_get_token();
     my $apikey = cnf_str(cnf("apikey"));
 
@@ -1352,6 +1354,8 @@ sub uc_auth {
 sub uc_session {
     my $options = shift;
     shift; # ignore previous
+
+    weechat_only;
 
     my $token = $options->{token} // cnf_str(cnf("token"));
     lfm_info("Retrieving session key from last.fm ...");
