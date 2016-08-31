@@ -9,6 +9,7 @@ use warnings;
 use constant BASE_URL => 'https://ws.audioscrobbler.com/2.0/?';
 my $prgname = "lfm";
 my $confprefix = "plugins.var.perl.$prgname";
+my $weechat = 1;
 
 my $LFMHELP =
 
@@ -563,6 +564,42 @@ binmode(STDOUT, ":utf8");
 
 my %env = ();
 
+
+#### Platform Abstraction Stuff  ####
+sub lfm_print {
+    my $buffer = shift;
+    my $what = shift;
+
+    if ($weechat) {
+        weechat::command($buffer, $what);
+    } else {
+        #default to stdout
+        print $what;
+    }
+}
+
+sub lfm_error {
+    my $what = shift;
+
+    if ($weechat) {
+        weechat::print("", "[lfm error] $what");
+    } else {
+        #default to stdout
+        print STDERR "[lfm error] $what";
+    }
+}
+
+sub lfm_info {
+    my $what = shift;
+
+    if ($weechat) {
+        weechat::print("", "[lfm info] $what");
+    } else {
+        #default to stdout
+        print STDERR "[lfm info] $what";
+    }
+}
+
 sub cnf {
     my $option = shift;
     return weechat::config_get("$confprefix.$option");
@@ -577,15 +614,14 @@ sub cnf_set_default {
     if (! weechat::config_is_set_plugin($option)) {
         if (! $default) { $default = ""; }
         weechat::config_set_plugin($option, $default);
-        weechat::print("", "Set $confprefix.$option = $default");
+        lfm_info("Set $confprefix.$option = $default");
     } elsif ($overwrite) {
         if ($default) {
             weechat::config_set_plugin($option, $default);
-            weechat::print("", "Set $confprefix.$option = $default");
+            lfm_info("Set $confprefix.$option = $default");
         }
     } elsif ($default && $verbose) {
-        weechat::print("",
-            "Would set: $confprefix.$option = $default");
+        lfm_info("Would set: $confprefix.$option = $default");
     }
 }
 
@@ -602,7 +638,7 @@ sub load_alias {
         $input = <FILE>;
         close FILE;
     } else {
-        weechat::print("", "Error: alias file not found: $path");
+        lfm_error("Error: alias file not found: $path");
         return "";
     }
     return $input;
@@ -1138,7 +1174,7 @@ sub uc_format {
 sub uc_dump {
     my $options = shift;
     my $data = shift;
-    weechat::print("", Dumper($data));
+    lfm_info(Dumper($data));
     return "";
 }
 
@@ -1175,8 +1211,8 @@ sub uc_love {
     my $succ = lfm_track_love($result->{artist}, $result->{title});
 
     if (! $succ) {
-        weechat::print("", "love command failed! API response:");
-        weechat::print("",  Dumper($succ));
+        lfm_error("love command failed! API response:");
+        lfm_error(Dumper($succ));
     }
     if (! $params->{quiet}) {
         my $fpattern = weechat::config_string(cnf("pattern.love"));
@@ -1250,8 +1286,8 @@ sub uc_hate {
     my $succ = lfm_track_hate($result->{artist}, $result->{title});
 
     if (! $succ) {
-        weechat::print("", "unlove command failed! API response:");
-        weechat::print("",  Dumper($succ));
+        lfm_error("unlove command failed! API response:");
+        lfm_error(Dumper($succ));
     }
     if (! $params->{quiet}) {
         my $fpattern = weechat::config_string(cnf("pattern.hate"));
@@ -1267,11 +1303,10 @@ sub uc_auth {
     my $token = lfm_auth_get_token();
     my $apikey = weechat::config_string(cnf("apikey"));
 
-    weechat::print("", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-    weechat::print("", "Received token: $token");
-    weechat::print("",
-        "Visit https://www.last.fm/api/auth/?api_key=$apikey&token=$token");
-    weechat::print("", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+    lfm_info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+    lfm_info("Received token: $token");
+    lfm_info("Visit https://www.last.fm/api/auth/?api_key=$apikey&token=$token");
+    lfm_info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
 
     weechat::config_set_plugin("token", $token);
     return "";
@@ -1282,11 +1317,11 @@ sub uc_session {
     shift; # ignore previous
 
     my $token = $options->{token} // weechat::config_string(cnf("token"));
-    weechat::print("", "Retrieving session key from last.fm ...");
-    weechat::print("", "Using token: $token");
+    lfm_info("Retrieving session key from last.fm ...");
+    lfm_info("Using token: $token");
     my $sk = lfm_auth_get_session($token);
     weechat::config_set_plugin("sk", $sk);
-    weechat::print("", "Session key saved.");
+    lfm_info("Session key saved.");
     return "";
 }
 
@@ -1335,7 +1370,7 @@ sub uc_subshell {
                     $env{$k} = $out->{$k};
                 }
             } else {
-                weechat::print("", "lfm: tried to embed something other than hash in environment");
+                lfm_error("lfm: tried to embed something other than hash in environment");
             }
         } else {
             $env{$options->{out}} = $out;
@@ -1440,7 +1475,7 @@ sub process_input {
             #TODO: error case
         }
     } else {
-        weechat::print("", "lfm: Input error");
+        lfm_error("Input error");
     }
 }
 
@@ -1451,7 +1486,7 @@ sub lfm {
 
     %env = ();
     $env{env} = \%env;
-    weechat::command($buffer, process_input($args));
+    lfm_print($buffer, process_input($args));
 }
 
 sub dumpast {
@@ -1461,12 +1496,12 @@ sub dumpast {
 
     if ($args =~ $lfmparser) {
         my $lfm = $/{lfm};
-        weechat::print("", Dumper($lfm));
+        lfm_info(Dumper($lfm));
         if (my $cmdchain = $lfm->{cmdchain} ) {
             # Command Chain
             foreach my $cmd (@{$cmdchain}) {
                 if ($cmd->{"alias"}) {
-                    weechat::print("", "Dumping AST for alias " . $cmd->{alias}->{name});
+                    lfm_info("Dumping AST for alias " . $cmd->{alias}->{name});
                     my $input = load_alias($cmd->{alias}->{name});
                     $input = bind_alias($input, $cmd->{alias}->{args});
                     dumpast($data, $buffer, $input);
@@ -1474,11 +1509,12 @@ sub dumpast {
             }
         }
     } else {
-        weechat::print("", "ERROR: No valid input. No AST available.");
+        lfm_error("No valid input. No AST available.");
     }
 }
 
 if ($ARGV[0] && $ARGV[0] =~ /cli/i) {
+    $weechat = 0;
     print process_input($ARGV[1]);
 } else {
     weechat::register("lfm", "i7c", "0.3", "GPL3", "Prints last.fm shit", "", "");
