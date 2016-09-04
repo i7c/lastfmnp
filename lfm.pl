@@ -614,6 +614,13 @@ sub weechat_only {
     }
 }
 
+sub standalone_only {
+    if ($weechat) {
+        lfm_error("This action only works in standalone mode.");
+        exit 1;
+    }
+}
+
 sub cnf {
     my $option = shift;
 
@@ -781,6 +788,7 @@ my $lfmparser = qr{
         | <amap>
         | <join>
         | <cp>
+        | <print>
         | <auth>
         | <session>
         | <conf>
@@ -921,6 +929,9 @@ my $lfmparser = qr{
 
     <rule: cp>
         cp
+
+    <rule: print>
+        print
 
     <rule: auth>
         auth
@@ -1328,6 +1339,16 @@ sub uc_cp {
     return $input;
 }
 
+sub uc_print {
+    my $options = shift;
+    my $input = shift;
+
+    standalone_only;
+
+    lfm_print(undef, $input);
+    return "";
+}
+
 sub uc_hate {
     my $params = shift;
     shift; # ignore previous
@@ -1483,6 +1504,7 @@ sub process_command {
         "amap" => \&uc_amap,
         "join" => \&uc_join,
         "cp" => \&uc_cp,
+        "print" => \&uc_print,
         "auth" => \&uc_auth,
         "session" => \&uc_session,
         "conf" => \&uc_conf,
