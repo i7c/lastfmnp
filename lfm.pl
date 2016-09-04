@@ -571,6 +571,8 @@ sub lfm_print {
     my $buffer = shift;
     my $what = shift;
 
+    if (! $what) return;
+
     if ($weechat) {
         weechat::command($buffer, $what);
     } else {
@@ -582,6 +584,8 @@ sub lfm_print {
 sub lfm_error {
     my $what = shift;
 
+    if (! $what) return;
+
     if ($weechat) {
         weechat::print("", "[lfm error] $what");
     } else {
@@ -592,6 +596,8 @@ sub lfm_error {
 
 sub lfm_info {
     my $what = shift;
+
+    if (! $what) return;
 
     if ($weechat) {
         weechat::print("", "[lfm info] $what");
@@ -1587,7 +1593,8 @@ if (defined &{"weechat::register"}) {
     $weechat = 0;
     %env = ();
     $env{env} = \%env;
-    print process_input($ARGV[1]);
+    my $res = process_input($ARGV[1]);
+    print $res if $res;
 }
 
 # vim: ts=4:sw=4:et
