@@ -571,7 +571,7 @@ sub lfm_print {
     my $buffer = shift;
     my $what = shift;
 
-    if (! $what) return;
+    return if (! $what);
 
     if ($weechat) {
         weechat::command($buffer, $what);
@@ -584,7 +584,7 @@ sub lfm_print {
 sub lfm_error {
     my $what = shift;
 
-    if (! $what) return;
+    return if (! $what);
 
     if ($weechat) {
         weechat::print("", "[lfm error] $what");
@@ -597,7 +597,7 @@ sub lfm_error {
 sub lfm_info {
     my $what = shift;
 
-    if (! $what) return;
+    return if (! $what);
 
     if ($weechat) {
         weechat::print("", "[lfm info] $what");
