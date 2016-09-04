@@ -817,8 +817,9 @@ my $lfmparser = qr{
     <rule: utracks>
         utracks
         (
-            ((-u|--user) <user=name>)
-            | ((-n|--number) <number>)
+            (-u|--user) <user=name>
+            | (-n|--number) <number>
+            | (-p|--page) <page=number>
         )* <ws>
 
     <rule: uatracks>
@@ -1001,9 +1002,10 @@ sub format_output {
 sub lfm_user_get_recent_tracks {
     my $user = shift;
     my $limit = shift;
+    my $page = shift;
 
     my $apires = lfmjson("user.getRecentTracks",
-        {user => $user, limit => $limit });
+        {user => $user, limit => $limit, page => $page });
     return $apires->{recenttracks}->{track};
 }
 
@@ -1146,7 +1148,7 @@ sub uc_np {
 
     my $result =
         extract_track_info(array_take(
-                lfm_user_get_recent_tracks($user, 1), 0));
+                lfm_user_get_recent_tracks($user, 1, 1), 0));
     $result->{who} = $options->{np_user} // $env{user}
         // cnf_str(cnf("who"));
     $result->{me} = $options->{np_user} // $env{user} // "/me";
@@ -1165,7 +1167,8 @@ sub uc_user_recent_tracks {
     my $user = $options->{user} // $env{user}
         // cnf_str(cnf("user"));
     my $number = $options->{number} // $env{num} // 10;
-    return lfm_user_get_recent_tracks($user, $number);
+    my $page = $options->{page} // $env{page} // 1;
+    return lfm_user_get_recent_tracks($user, $number, $page);
 }
 
 sub uc_user_artist_tracks {
