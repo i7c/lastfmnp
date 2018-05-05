@@ -6,9 +6,6 @@ use Digest::MD5 qw(md5_hex);
 use strict;
 use warnings;
 
-binmode(STDOUT, ":utf8");
-
-
 use constant BASE_URL => 'https://ws.audioscrobbler.com/2.0/?';
 my $prgname = "lfm";
 my $confprefix = "plugins.var.perl.$prgname";
