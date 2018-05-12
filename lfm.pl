@@ -950,7 +950,7 @@ my $lfmparser = qr{
         )* <ws>
 
     <rule: subshell>
-        \$ <in=name>? { <sublfm=lfm> } <out=name>?
+        \$ <in=name>? \{ <sublfm=lfm> \} <out=name>?
 
     <rule: variable>
         let <var=name> = ("<value=str>" | <value=name> | <value=number>)
